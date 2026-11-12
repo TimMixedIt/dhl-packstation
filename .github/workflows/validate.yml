@@ -1,0 +1,52 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ha: "2026.10.4"
+            harness: "pytest-homeassistant-custom-component==0.13.375"
+          - ha: "2026.11.1"
+            harness: "pytest-homeassistant==2026.11.1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install matching framework and test tools
+        env:
+          TEST_HARNESS: ${{ matrix.harness }}
+        run: python -m pip install "$TEST_HARNESS" ruff==0.14.5
+      - run: ruff check .
+      - run: ruff format --check .
+      - name: Test integration
+        run: python -c 'import homeassistant; import pytest; raise SystemExit(pytest.main(["-q", "--cov", "--cov-report=term-missing"]))'
+
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration
+          comment: false

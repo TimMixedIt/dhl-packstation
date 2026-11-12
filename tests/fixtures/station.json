@@ -1,0 +1,17 @@
+{
+  "primaryKeyPF": "1-67141189",
+  "primaryKeyZipRegion": "189",
+  "zipCode": "67141",
+  "city": "Neuhofen",
+  "street": "Industriestr.",
+  "houseNo": "10",
+  "locationType": "PACKSTATION",
+  "locationName": "ALDI-Markt",
+  "liveStatus": {
+    "freeCompartmentsS": 9,
+    "freeCompartmentsM": 10,
+    "freeCompartmentsL": 8,
+    "freeCompartmentsXl": 1,
+    "sourceTimestamp": "2026-11-12T23:58:04+0100"
+  }
+}

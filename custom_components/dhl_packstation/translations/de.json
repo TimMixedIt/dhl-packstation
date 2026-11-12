@@ -1,0 +1,63 @@
+{
+  "title": "DHL Packstation",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Packstation hinzufügen",
+        "description": "Gib die Postleitzahl des Standorts und die Packstationsnummer ein. Ein DHL-Konto ist nicht erforderlich. Nicht jede Station liefert freie Fachzahlen.",
+        "data": {
+          "postal_code": "Postleitzahl",
+          "station_number": "Packstationsnummer"
+        }
+      }
+    },
+    "error": {
+      "invalid_location": "Bitte eine fünfstellige Postleitzahl und eine Packstationsnummer mit ein bis vier Ziffern eingeben.",
+      "station_not_found": "DHL hat diese konkrete Packstation nicht gefunden. Bitte die Postleitzahl des Standorts und die Nummer prüfen.",
+      "invalid_response": "DHL hat unerwartete Daten geliefert. Bitte später erneut versuchen.",
+      "cannot_connect": "DHL ist nicht erreichbar oder begrenzt die Abfragen. Bitte später erneut versuchen."
+    },
+    "abort": {
+      "already_configured": "Diese Packstation ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Aktualität der Daten",
+        "description": "Fachzahlen werden nicht verfügbar, sobald der DHL-Datenstand dieses Alter erreicht. Die Abfrage erfolgt alle 15 Minuten.",
+        "data": {
+          "max_age_minutes": "Maximales Alter der DHL-Daten (Minuten)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "free_s": {
+        "name": "Freie Fächer S",
+        "unit_of_measurement": "Fächer"
+      },
+      "free_m": {
+        "name": "Freie Fächer M",
+        "unit_of_measurement": "Fächer"
+      },
+      "free_l": {
+        "name": "Freie Fächer L",
+        "unit_of_measurement": "Fächer"
+      },
+      "free_xl": {
+        "name": "Freie Fächer XL",
+        "unit_of_measurement": "Fächer"
+      },
+      "source_timestamp": {
+        "name": "DHL-Datenstand"
+      }
+    },
+    "binary_sensor": {
+      "stale_data": {
+        "name": "DHL-Daten veraltet oder fehlend"
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "title": "DHL Packstation",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add a Packstation",
+        "description": "Enter the postal code of the station and its Packstation number. No DHL account is required. Free compartment data may not be available at every station.",
+        "data": {
+          "postal_code": "Postal code",
+          "station_number": "Packstation number"
+        }
+      }
+    },
+    "error": {
+      "invalid_location": "Enter a five-digit postal code and a Packstation number with one to four digits.",
+      "station_not_found": "DHL did not return this exact Packstation. Check the postal code of the station and its number.",
+      "invalid_response": "DHL returned unexpected data. Try again later.",
+      "cannot_connect": "DHL could not be reached or is limiting requests. Try again later."
+    },
+    "abort": {
+      "already_configured": "This Packstation is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Data freshness",
+        "description": "Counts become unavailable when the DHL observation reaches this age. Requests run every 15 minutes.",
+        "data": {
+          "max_age_minutes": "Maximum age of DHL data (minutes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "free_s": {
+        "name": "Free S compartments",
+        "unit_of_measurement": "compartments"
+      },
+      "free_m": {
+        "name": "Free M compartments",
+        "unit_of_measurement": "compartments"
+      },
+      "free_l": {
+        "name": "Free L compartments",
+        "unit_of_measurement": "compartments"
+      },
+      "free_xl": {
+        "name": "Free XL compartments",
+        "unit_of_measurement": "compartments"
+      },
+      "source_timestamp": {
+        "name": "DHL data timestamp"
+      }
+    },
+    "binary_sensor": {
+      "stale_data": {
+        "name": "DHL data stale or missing"
+      }
+    }
+  }
+}
