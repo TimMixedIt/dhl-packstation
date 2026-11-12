@@ -4,6 +4,8 @@ Home Assistant integration for the free S, M, L, and XL compartments of German D
 
 **Status: local beta, 0.1.0b1. Not published in the Marketplace yet.** Repository URLs in the manifest reserve the intended project name; that repository has not been published. This is an independent community project, not an official DHL product.
 
+[Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
+
 ## What it provides
 
 Each station becomes one device with six entities:
