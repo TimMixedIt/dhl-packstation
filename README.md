@@ -26,7 +26,7 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 - Internet access from Home Assistant to `www.dhl.de` over HTTPS.
 - A Packstation whose availability DHL exposes. A valid station can still have no live data.
 
-## Install the local beta
+## Installation
 
 ### Marketplace / HACS
 

@@ -2,7 +2,11 @@
   "domain": "dhl_packstation",
   "name": "DHL Packstation",
   "after_dependencies": [
-    "frontend"
+    "frontend",
+    "http"
+  ],
+  "categories": [
+    "productivity_information"
   ],
   "codeowners": [
     "@TimMixedIt"

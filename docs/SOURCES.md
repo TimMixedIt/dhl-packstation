@@ -21,3 +21,12 @@ The HTTP paths and fields were verified by actual responses and by inspecting DH
 - [Station detail](https://www.dhl.de/int-postfinder/webservice/rest/v1/locationByPrimaryKeyPF/1-67141189): includes `freeCompartmentsS`, `freeCompartmentsM`, `freeCompartmentsL`, `freeCompartmentsXl` and `sourceTimestamp` within `liveStatus` when available.
 
 The 15-minute poll interval, configurable 60-minute default maximum data age and five-minute future clock-skew allowance are project policies. DHL did not provide documented polling quotas, a guaranteed update interval, or a reservation promise.
+
+## Bundled dashboard cards (0.2.0b1)
+
+- [Custom card lifecycle and sizing](https://contributors.home-assistant.io/frontend/custom-ui/card/): web components receive `hass` and configuration, can open more-info, and supply sizing hints.
+- [Card editor and picker](https://contributors.home-assistant.io/frontend/custom-ui/card-editor/): `window.customCards`, configuration editor, `config-changed`, and stub configuration.
+- [Static registration in HA 2026.11.1](https://github.com/home-assistant/core/blob/2026.11.1/homeassistant/components/http/server.py): `StaticPathConfig` and `async_register_static_paths`.
+- [Frontend module helper in HA 2026.11.1](https://github.com/home-assistant/core/blob/2026.11.1/homeassistant/components/frontend/__init__.py): `add_extra_js_url` loads the included module without changing dashboard storage.
+
+The cards display public station metadata from the integration's authenticated entity states. The static path contains code only. No third-party script host or external frontend library is used at runtime.
