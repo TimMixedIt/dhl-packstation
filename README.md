@@ -2,7 +2,7 @@
 
 Home Assistant integration for the free S, M, L, and XL compartments of German DHL Packstations. Set up each station from the Home Assistant interface using its postal code and Packstation number. No DHL account or developer key is required.
 
-**Status: public beta, 0.2.0b1.** Available as a custom repository; not yet included in the default Marketplace catalog. This is an independent community project, not an official DHL product. Field testing is still in progress.
+**Status: public beta, 0.2.0b2.** Available as a custom repository; not yet included in the default Marketplace catalog. This is an independent community project, not an official DHL product. Field testing is still in progress.
 
 [Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
 
@@ -123,7 +123,7 @@ Run the dependency-free JavaScript checks with Node.js 22 or newer:
 node --test tests/frontend/*.test.mjs
 ```
 
-The browser CI job runs the real bundled elements in Chromium with Home Assistant state fixtures. It covers both themes at 320/768/1024/1440px, card selection, stale data, recovery, more-info events, the visual editor, keyboard navigation, and axe WCAG A/AA checks. It is a component/browser test, not an end-to-end test inside a production Home Assistant installation.
+The browser CI jobs run the real bundled elements in Chromium and WebKit with Home Assistant state fixtures. They cover both themes at 320/768/1024/1440px and 280/320/360px cards inside narrow and wide browser windows, card selection, stale data, recovery, more-info events, the visual editor, keyboard navigation, and axe WCAG A/AA checks. It is a component/browser test, not an end-to-end test inside a production Home Assistant installation.
 
 Automated tests use the real Home Assistant flow, config entry, device, entity, timer, and coordinator implementations with mocked DHL HTTP responses. External sockets are disabled in these tests. Live requests are a separate, explicitly recorded check. See [the German field test plan](docs/TESTPLAN_DE.md), [release checklist](docs/RELEASE_CHECKLIST.md), and [source references](docs/SOURCES.md).
 

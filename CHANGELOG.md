@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0b2
+
+- Size cards by their own width instead of the browser viewport, fixing stretched compartments and excessive padding in narrow Home Assistant dashboard columns.
+- Keep compartment labels inside their yellow shapes with explicit line height, minimum shape height and stable grid rows, including Safari/WebKit.
+- Test 280/320/360px cards inside both 400px and 1920px viewports, including label geometry and consistent sizing.
+- Run the browser regression suite in both Chromium and WebKit.
+
 ## 0.2.0b1
 
 First public beta, for field testing through a custom Marketplace/HACS repository.

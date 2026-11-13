@@ -30,3 +30,5 @@ The 15-minute poll interval, configurable 60-minute default maximum data age and
 - [Frontend module helper in HA 2026.11.1](https://github.com/home-assistant/core/blob/2026.11.1/homeassistant/components/frontend/__init__.py): `add_extra_js_url` loads the included module without changing dashboard storage.
 
 The cards display public station metadata from the integration's authenticated entity states. The static path contains code only. No third-party script host or external frontend library is used at runtime.
+
+- [CSS container queries](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries): card-local responsive lengths and breakpoints; verified in Chromium and WebKit.

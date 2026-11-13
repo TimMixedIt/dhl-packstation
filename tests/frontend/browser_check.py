@@ -32,10 +32,12 @@ async def main():
     errors, checks = [], []
     try:
         async with async_playwright() as playwright:
+            engine = os.environ.get("BROWSER_ENGINE", "chromium")
+            assert engine in {"chromium", "webkit"}
             options = {"headless": True}
-            if channel := os.environ.get("BROWSER_CHANNEL"):
+            if (channel := os.environ.get("BROWSER_CHANNEL")) and engine == "chromium":
                 options["channel"] = channel
-            browser = await playwright.chromium.launch(**options)
+            browser = await getattr(playwright, engine).launch(**options)
             page = await browser.new_page(viewport={"width": 768, "height": 1400})
             page.on("pageerror", lambda error: errors.append(str(error)))
             await page.goto(
@@ -72,6 +74,48 @@ async def main():
                 await single.screenshot(path=str(artifact_dir / f"single-{theme}.png"))
                 await multi.screenshot(path=str(artifact_dir / f"overview-{theme}.png"))
             await page.evaluate("document.body.classList.remove('light')")
+            dimensions = {}
+            for viewport in [400, 1920]:
+                await page.set_viewport_size({"width": viewport, "height": 1600})
+                for card_width in [280, 320, 360]:
+                    await page.locator("main").evaluate(
+                        "(el, width) => el.style.maxWidth = `${width}px`", card_width
+                    )
+                    geometry = await single.evaluate("""element => {
+                        const root = element.shadowRoot;
+                        const shapes = [...root.querySelectorAll('.shape')];
+                        return {
+                            contained: shapes.every(el => {
+                                const shape = el.getBoundingClientRect();
+                                const range = document.createRange();
+                                range.selectNodeContents(el);
+                                const label = range.getBoundingClientRect();
+                                return label.top >= shape.top - 1 && label.bottom <= shape.bottom + 1
+                                    && label.left >= shape.left - 1 && label.right <= shape.right + 1;
+                            }),
+                            tileHeight: root.querySelector('.tile').getBoundingClientRect().height,
+                            shapeFont: getComputedStyle(shapes[0]).fontSize,
+                            bodyPadding: getComputedStyle(root.querySelector('.body')).paddingLeft,
+                        };
+                    }""")
+                    assert geometry["contained"], (
+                        engine,
+                        viewport,
+                        card_width,
+                        geometry,
+                    )
+                    if viewport == 400:
+                        dimensions[card_width] = geometry
+                    else:
+                        assert geometry == dimensions[card_width], (
+                            card_width,
+                            geometry,
+                            dimensions[card_width],
+                        )
+                checks.append(f"narrow cards 280/320/360px in {viewport}px viewport")
+            await page.locator("main").evaluate("el => el.style.maxWidth = '360px'")
+            await single.screenshot(path=str(artifact_dir / "single-narrow.png"))
+            await page.locator("main").evaluate("el => el.style.maxWidth = '600px'")
             await single.locator("summary").focus()
             await page.keyboard.press("Enter")
             assert not await single.locator("details").get_attribute("open") == ""
@@ -153,7 +197,12 @@ async def main():
     finally:
         server.shutdown()
         server.server_close()
-    result = {"checks": checks, "console_errors": errors, "fixtures": True}
+    result = {
+        "engine": engine,
+        "checks": checks,
+        "console_errors": errors,
+        "fixtures": True,
+    }
     (artifact_dir / "browser-results.json").write_text(json.dumps(result, indent=2))
     print(json.dumps(result, indent=2))
 

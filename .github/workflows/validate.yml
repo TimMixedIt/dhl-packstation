@@ -53,6 +53,12 @@ jobs:
 
   cards:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    env:
+      BROWSER_ENGINE: ${{ matrix.engine }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -65,7 +71,7 @@ jobs:
           python-version: "3.14"
       - run: node --test tests/frontend/*.test.mjs
       - run: python -m pip install playwright==1.65.1
-      - run: python -m playwright install --with-deps chromium
+      - run: python -m playwright install --with-deps "$BROWSER_ENGINE"
       - run: npm install --prefix /tmp/dhl-a11y axe-core@4.14.0
       - name: Browser and accessibility checks
         env:

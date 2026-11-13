@@ -25,7 +25,7 @@ async def test_cards_register_once_per_integration(hass):
         assert config.cache_headers is False
         for name in ["cards.js", "data.js", "view.js", "styles.js", "editor.js"]:
             assert (Path(config.path) / name).is_file()
-    assert hass.data[DATA_EXTRA_MODULE_URL] == {"/dhl_packstation/cards.js?v=0.2.0b1"}
+    assert hass.data[DATA_EXTRA_MODULE_URL] == {"/dhl_packstation/cards.js?v=0.2.0b2"}
 
 
 async def test_static_modules_are_served(hass, hass_client):
