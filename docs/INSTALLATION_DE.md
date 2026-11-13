@@ -1,6 +1,12 @@
 # DHL Packstation – Beta installieren
 
-Version: **0.1.0b1**, benötigt **Home Assistant 2026.10.4 oder neuer**.
+Version: **0.2.0b1**, benötigt **Home Assistant 2026.10.4 oder neuer**.
+
+## Über Marketplace / HACS
+
+Unter „Benutzerdefinierte Repositories“ die URL **https://github.com/TimMixedIt/dhl-packstation** mit Kategorie **Integration** hinzufügen und herunterladen. Danach HA neu starten und unter Geräte & Dienste „DHL Packstation“ hinzufügen. Falls du ausdrücklich die markierte Beta-Version auswählen möchtest, Vorabversionen anzeigen lassen; alternativ ist der Standardzweig `main` installierbar.
+
+## Manuell über ZIP
 
 1. Ein Backup deiner Home-Assistant-Konfiguration erstellen.
 2. Das Installations-ZIP entpacken.
@@ -11,10 +17,19 @@ Version: **0.1.0b1**, benötigt **Home Assistant 2026.10.4 oder neuer**.
 
 Die Integration erzeugt ein Gerät pro Station mit vier Fachzahlsensoren für S/M/L/XL sowie zwei Diagnosewerten: DHL-Datenstand und „DHL-Daten veraltet oder fehlend“. Weitere Stationen werden durch erneutes Hinzufügen der Integration eingerichtet.
 
+## Die mitgelieferten Karten
+
+Nach der Einrichtung den Browser einmal neu laden. Dann im Dashboard „Bearbeiten → Karte hinzufügen“ öffnen:
+
+- **DHL Packstation · Freie Fächer** für die Darstellung einer Station wie im DHL-Bild.
+- **DHL Packstation · Mehrere Stationen** für den Vergleich mehrerer Stationen.
+
+Die Karte im visuellen Editor auswählen und die Station(en) einstellen. Ohne Auswahl zeigt die Übersicht alle eingerichteten Stationen. „Genaue Fachzahlen anzeigen“ ersetzt „viele frei“ durch die konkrete Zahl. Ein Klick auf eine Fachgröße öffnet deren Sensorinformationen. Es ist kein zusätzliches Karten-Repository und kein manueller Ressourceneintrag nötig. Vorhandene Dashboards werden nicht automatisch verändert.
+
 Die Abfrage erfolgt gemeinsam alle 15 Minuten. Unter den Optionen kannst du das maximale Alter der DHL-Daten festlegen. Standard sind 60 Minuten. Danach werden Fachzahlen nicht verfügbar, bis DHL wieder hinreichend aktuelle Daten liefert. Ein echter Nullwert bedeutet dagegen, dass DHL null freie Fächer dieser Größe gemeldet hat.
 
 Falls du das frühere YAML-Beispiel installiert hast: Nach erfolgreichem Vergleich die dortigen REST-Sensoren selbst entfernen, wenn du sie nicht mehr brauchst. Sie werden nicht automatisch übernommen oder gelöscht.
 
 Für ein Update den bisherigen Komponentenordner sichern, durch den neuen ersetzen und HA neu starten. Bei Problemen den gesicherten Ordner zurückkopieren und erneut starten. Zum Entfernen zuerst die Integrationseinträge in HA löschen, dann den Komponentenordner entfernen und HA neu starten.
 
-Diese lokale Beta wurde noch nicht in deiner HA-Installation eingerichtet. Sie ist noch nicht im Marketplace veröffentlicht. Der nächste Schritt ist der [Praxistest](TESTPLAN_DE.md).
+Diese Beta ist als benutzerdefiniertes Repository verfügbar, aber noch nicht in den allgemeinen Marketplace-Katalog aufgenommen. Der nächste Schritt ist der [Praxistest](TESTPLAN_DE.md).

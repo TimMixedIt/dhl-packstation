@@ -15,6 +15,7 @@ class PackstationEntity(CoordinatorEntity[PackstationCoordinator]):
     def __init__(self, coordinator: PackstationCoordinator, key: str) -> None:
         """Set a stable identity and device metadata."""
         super().__init__(coordinator)
+        self._key = key
         station = coordinator.data
         self._attr_unique_id = f"{station.primary_key}_{key}"
         self._attr_device_info = DeviceInfo(
@@ -29,3 +30,17 @@ class PackstationEntity(CoordinatorEntity[PackstationCoordinator]):
                 "&locationType=packstationen"
             ),
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Let bundled cards find entities independently of names and language."""
+        station = self.coordinator.data
+        return {
+            "dhl_packstation_id": station.primary_key,
+            "dhl_packstation_key": self._key,
+            "station_number": station.station_number,
+            "postal_code": station.postal_code,
+            "city": station.city,
+            "address": station.address,
+            "location_name": station.name,
+        }

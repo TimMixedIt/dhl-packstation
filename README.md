@@ -2,7 +2,7 @@
 
 Home Assistant integration for the free S, M, L, and XL compartments of German DHL Packstations. Set up each station from the Home Assistant interface using its postal code and Packstation number. No DHL account or developer key is required.
 
-**Status: local beta, 0.1.0b1. Not published in the Marketplace yet.** Repository URLs in the manifest reserve the intended project name; that repository has not been published. This is an independent community project, not an official DHL product.
+**Status: public beta, 0.2.0b1.** Available as a custom repository; not yet included in the default Marketplace catalog. This is an independent community project, not an official DHL product. Field testing is still in progress.
 
 [Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
 
@@ -28,6 +28,12 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 
 ## Install the local beta
 
+### Marketplace / HACS
+
+Add **`https://github.com/TimMixedIt/dhl-packstation`** as a **custom repository**, category **Integration**, then download it. Restart Home Assistant and add **DHL Packstation** under Devices & services. With only beta releases available, the default `main` branch can be installed; enable pre-release versions if you want to select the tagged beta explicitly.
+
+### Manual ZIP installation
+
 1. Extract the installation ZIP. Copy its `custom_components/dhl_packstation` folder to `<HA config>/custom_components/dhl_packstation`. The final path must contain `manifest.json` directly inside `dhl_packstation`.
 2. Restart Home Assistant after this manual installation.
 3. Go to **Settings → Devices & services → Add integration → DHL Packstation**.
@@ -36,7 +42,44 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 
 No YAML configuration is used. If you tried the earlier REST example, remove that example yourself after verifying the new integration; its entities are separate and are not migrated or deleted automatically.
 
-For Home Assistant 2026.11 and newer, the Marketplace is under Settings. For older supported versions, use HACS. Installation as a custom repository will be documented with a working link after the GitHub repository is published; the code and `hacs.json` already use the expected directory structure.
+For Home Assistant 2026.11 and newer, the Marketplace is under Settings. For older supported versions, use HACS.
+
+## Dashboard cards
+
+**Both cards are included and loaded automatically by the integration.** No second repository, card dependency, or manual resource entry is required. Reload your browser once after adding the integration so the new cards load. The integration never changes your dashboard automatically.
+
+Edit a dashboard → Add card, then choose:
+
+- **DHL Packstation · Freie Fächer**: the single-station card, with four yellow compartment shapes, availability icons, timestamp, help dialog and collapsible header.
+- **DHL Packstation · Mehrere Stationen**: compact rows for comparing several stations, with S/M/L/XL, address, timestamp and separate freshness status per station.
+
+Use the visual card editor to select a station or restrict the overview to selected stations. Without a selection, the overview shows all configured stations. Above five compartments, the default is “many free”, as on DHL's page. Turn on exact counts in the editor if preferred. Renaming an entity or changing the system language does not break the station-to-sensor mapping. Clicking a compartment opens the corresponding HA more-info dialog.
+
+The cards use HA theme colors in light and dark mode. Unknown/stale/unreachable values have distinct neutral states and never appear as zero. Yellow shape heights illustrate compartment **size**, not occupancy.
+
+The following previews use test fixture data, not live availability:
+
+| Single station | Several stations |
+| --- | --- |
+| ![Single-station card](docs/images/single-dark.png) | ![Multi-station card](docs/images/overview-dark.png) |
+
+Optional YAML examples (the visual editor is sufficient):
+
+```yaml
+type: custom:dhl-packstation-card
+station: "1-67141189"
+show_exact: false
+```
+
+```yaml
+type: custom:dhl-packstation-overview-card
+# Omit stations to show every configured station.
+stations:
+  - "1-67141189"
+  - "1-33104182"
+```
+
+Station identifiers can be read from the entities' `dhl_packstation_id` attribute; they are also selected directly by name in the editor.
 
 ## Remove or update
 
@@ -73,6 +116,14 @@ uv pip install --python .venv/bin/python --group dev
 ```
 
 The Home Assistant import before pytest initializes its HTTP library aliases before unrelated pytest plugins load. For the 2026.10.4 compatibility run, use a separate environment with `pytest-homeassistant-custom-component==0.13.375` and `ruff==0.14.5` instead of the current development group. Tests use the matching helper package in each environment. No Home Assistant dependency is overridden to force an incompatible test harness.
+
+Run the dependency-free JavaScript checks with Node.js 22 or newer:
+
+```sh
+node --test tests/frontend/*.test.mjs
+```
+
+The browser CI job runs the real bundled elements in Chromium with Home Assistant state fixtures. It covers both themes at 320/768/1024/1440px, card selection, stale data, recovery, more-info events, the visual editor, keyboard navigation, and axe WCAG A/AA checks. It is a component/browser test, not an end-to-end test inside a production Home Assistant installation.
 
 Automated tests use the real Home Assistant flow, config entry, device, entity, timer, and coordinator implementations with mocked DHL HTTP responses. External sockets are disabled in these tests. Live requests are a separate, explicitly recorded check. See [the German field test plan](docs/TESTPLAN_DE.md), [release checklist](docs/RELEASE_CHECKLIST.md), and [source references](docs/SOURCES.md).
 

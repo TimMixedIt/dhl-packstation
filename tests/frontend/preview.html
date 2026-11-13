@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DHL Packstation – Kartenvorschau</title>
+  <style>
+    body { margin:0; padding:16px; font-family:Roboto,Arial,sans-serif; background:#101010; color:#f5f5f5; --primary-text-color:#f5f5f5; --secondary-text-color:#b2b2b2; --ha-card-background:#191919; --card-background-color:#191919; --secondary-background-color:#2d2d2d; --divider-color:#333; --disabled-color:#777; --primary-color:#03a9f4; --success-color:#89bd3d; --warning-color:#e3b341; }
+    body.light { background:#f5f5f5; color:#202020; --primary-text-color:#202020; --secondary-text-color:#5b5b5b; --ha-card-background:#fff; --card-background-color:#fff; --secondary-background-color:#eee; --divider-color:#ddd; --success-color:#416d00; --warning-color:#876000; }
+    main { max-width:600px; margin:auto; display:grid; gap:24px; }
+    h1 { font-size:15px; font-weight:500; color:var(--secondary-text-color); margin:8px 0 0; }
+  </style>
+  <script type="module" src="../../custom_components/dhl_packstation/www/cards.js"></script>
+</head>
+<body>
+<main aria-label="Kartenvorschau"><h1>Vorschau · Beispieldaten</h1><div id="single"></div><div id="multi"></div><div id="editor"></div></main>
+<script>
+  window.makeHass = () => {
+    const hass = { locale:{language:"de"},config:{time_zone:"Europe/Berlin"},states:{} };
+    for (const [id,number,postal,city,address,location,counts,stale] of [
+      ["1-67141189","189","67141","Neuhofen","Industriestr. 10","ALDI-Markt",[17,4,7,1],"off"],
+      ["1-33104182","182","33104","Paderborn","Hatzfelder Str. 73","Lidl Markt",[0,2,0,1],"off"],
+      ["1-35460101","101","35460","Staufenberg","Marktstr. 5","REWE Markt",[null,null,null,null],"on"],
+    ]) {
+      const metadata={dhl_packstation_id:id,station_number:number,postal_code:postal,city,address,location_name:location};
+      for (const [key,value] of [...["s","m","l","xl"].map((size,index)=>[`free_${size}`,counts[index]===null?"unavailable":String(counts[index])]),["source_timestamp","2026-11-12T23:28:03+00:00"],["stale_data",stale]]) {
+        hass.states[`sensor.renamed_${number}_${key}`]={state:value,attributes:{...metadata,dhl_packstation_key:key}};
+      }
+    }
+    return hass;
+  };
+  window.mount = async () => {
+    await customElements.whenDefined("dhl-packstation-card");
+    window.demoHass = makeHass();
+    window.single = document.createElement("dhl-packstation-card");
+    single.setConfig({type:"custom:dhl-packstation-card",station:"1-67141189"});
+    single.hass=demoHass; document.querySelector("#single").replaceChildren(single);
+    window.multi = document.createElement("dhl-packstation-overview-card");
+    multi.setConfig({type:"custom:dhl-packstation-overview-card"});
+    multi.hass=demoHass; document.querySelector("#multi").replaceChildren(multi);
+  };
+  window.ready = mount();
+</script>
+</body>
+</html>

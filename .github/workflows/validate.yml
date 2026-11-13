@@ -50,3 +50,24 @@ jobs:
         with:
           category: integration
           comment: false
+
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: node --test tests/frontend/*.test.mjs
+      - run: python -m pip install playwright==1.65.1
+      - run: python -m playwright install --with-deps chromium
+      - run: npm install --prefix /tmp/dhl-a11y axe-core@4.14.0
+      - name: Browser and accessibility checks
+        env:
+          AXE_CORE_PATH: /tmp/dhl-a11y/node_modules/axe-core/axe.min.js
+        run: python tests/frontend/browser_check.py
