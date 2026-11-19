@@ -1,10 +1,10 @@
-# DHL Packstation – Beta installieren
+# DHL Packstation – Installation
 
-Version: **0.2.0b2**, benötigt **Home Assistant 2026.10.4 oder neuer**.
+Version: **0.2.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
 
 ## Über Marketplace / HACS
 
-Unter „Benutzerdefinierte Repositories“ die URL **https://github.com/TimMixedIt/dhl-packstation** mit Kategorie **Integration** hinzufügen und herunterladen. Danach HA neu starten und unter Geräte & Dienste „DHL Packstation“ hinzufügen. Falls du ausdrücklich die markierte Beta-Version auswählen möchtest, Vorabversionen anzeigen lassen; alternativ ist der Standardzweig `main` installierbar.
+Unter „Benutzerdefinierte Repositories“ die URL **https://github.com/TimMixedIt/dhl-packstation** mit Kategorie **Integration** hinzufügen und herunterladen. Danach HA neu starten und unter Geräte & Dienste „DHL Packstation“ hinzufügen. Die stabile Version **0.2.0** auswählen; Vorabversionen müssen dafür nicht aktiviert werden.
 
 ## Manuell über ZIP
 
@@ -32,4 +32,4 @@ Falls du das frühere YAML-Beispiel installiert hast: Nach erfolgreichem Verglei
 
 Für ein Update den bisherigen Komponentenordner sichern, durch den neuen ersetzen und HA neu starten. Bei Problemen den gesicherten Ordner zurückkopieren und erneut starten. Zum Entfernen zuerst die Integrationseinträge in HA löschen, dann den Komponentenordner entfernen und HA neu starten.
 
-Diese Beta ist als benutzerdefiniertes Repository verfügbar, aber noch nicht in den allgemeinen Marketplace-Katalog aufgenommen. Der nächste Schritt ist der [Praxistest](TESTPLAN_DE.md).
+Die stabile Version ist als benutzerdefiniertes Repository verfügbar. Die Aufnahme in den allgemeinen Marketplace-Katalog ist beantragt und benötigt die Freigabe des HACS-Teams. Verbleibende praktische Prüfungen stehen im [Testplan](TESTPLAN_DE.md).

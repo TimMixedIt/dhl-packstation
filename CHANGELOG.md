@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- First stable release, promoting the tested 0.2.0b2 functionality without runtime changes.
+- Regular GitHub release for installation without opting into prereleases.
+- Updated version metadata and installation instructions; existing station entries, entity identities and dashboard configurations are retained.
+
 ## 0.2.0b2
 
 - Size cards by their own width instead of the browser viewport, fixing stretched compartments and excessive padding in narrow Home Assistant dashboard columns.

@@ -5,7 +5,7 @@ Die automatisierten Prüfungen ersetzen keinen mehrtägigen Betrieb mit der tats
 ## Installation und Alltag
 
 - [ ] Backup der HA-Konfiguration erstellen, aktuelle HA-Version notieren.
-- [ ] Beta installieren und über die Oberfläche einrichten; keinerlei DHL-Zugangsdaten eingeben.
+- [ ] Release installieren und über die Oberfläche einrichten; keinerlei DHL-Zugangsdaten eingeben.
 - [ ] Adresse der gefundenen Station mit DHL abgleichen.
 - [ ] Alle vier Fachgrößen und den Datenstand mit der Detailantwort vergleichen. „Viele frei“ auf der Website kann in der Integration eine genaue Zahl über fünf sein.
 - [ ] Mindestens 48 Stunden beobachten: Datenstände, echte Änderungen, Ausfälle und Erholungen festhalten. Nicht schneller abfragen, um Änderungen zu erzwingen.
@@ -22,7 +22,7 @@ Die automatisierten Prüfungen ersetzen keinen mehrtägigen Betrieb mit der tats
 - [ ] Bei tatsächlich veraltetem Datenstand: Fachzahlen werden nicht verfügbar, Zeitstempel bleibt sichtbar und der Problemsensor meldet veraltete/fehlende Daten.
 - [ ] In einer isolierten Testinstanz DHL-Verbindung unterbrechen und wiederherstellen. Erst unavailable, danach automatische Erholung. Keine Störung der produktiven HA-Installation für diesen Test erzeugen.
 - [ ] Station entfernen: keine weiteren Abfragen, andere Station bleibt aktiv.
-- [ ] Beta-Update und Rückkehr zur vorherigen Version testen, ohne Entity-IDs zu verlieren.
+- [ ] Versionsupdate und Rückkehr zur vorherigen Version testen, ohne Entity-IDs zu verlieren.
 
 ## Automatisiert abgedeckt
 

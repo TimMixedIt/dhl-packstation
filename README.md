@@ -2,7 +2,7 @@
 
 Home Assistant integration for the free S, M, L, and XL compartments of German DHL Packstations. Set up each station from the Home Assistant interface using its postal code and Packstation number. No DHL account or developer key is required.
 
-**Status: public beta, 0.2.0b2.** Available as a custom repository; not yet included in the default Marketplace catalog. This is an independent community project, not an official DHL product. Field testing is still in progress.
+**Status: stable release, 0.2.0.** Available as a custom repository; not yet included in the default Marketplace catalog. This is an independent community project, not an official DHL product. See the verification section for test coverage and remaining field checks.
 
 [Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
 
@@ -30,7 +30,7 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 
 ### Marketplace / HACS
 
-Add **`https://github.com/TimMixedIt/dhl-packstation`** as a **custom repository**, category **Integration**, then download it. Restart Home Assistant and add **DHL Packstation** under Devices & services. With only beta releases available, the default `main` branch can be installed; enable pre-release versions if you want to select the tagged beta explicitly.
+Add **`https://github.com/TimMixedIt/dhl-packstation`** as a **custom repository**, category **Integration**, then download it. Restart Home Assistant and add **DHL Packstation** under Devices & services. Select the stable **0.2.0** release; enabling pre-release versions is not required.
 
 ### Manual ZIP installation
 
@@ -85,7 +85,7 @@ Station identifiers can be read from the entities' `dhl_packstation_id` attribut
 
 Remove a station from Devices & services. Its HTTP polling and expiry callback stop when it unloads. Other configured stations continue working.
 
-For a manual update, back up the current component folder, replace it with the new folder, and restart Home Assistant. Stable station identifiers keep entity identities across reloads. Remove the folder only after removing all its entries, then restart. Restore the previous folder and restart to roll back an unsuccessful beta update.
+For a manual update, back up the current component folder, replace it with the new folder, and restart Home Assistant. Stable station identifiers keep entity identities across reloads. Remove the folder only after removing all its entries, then restart. Restore the previous folder and restart to roll back an unsuccessful update.
 
 ## Limits and troubleshooting
 
