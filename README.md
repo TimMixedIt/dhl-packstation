@@ -51,7 +51,7 @@ Edit a dashboard → Add card, then choose:
 - **DHL Packstation · Freie Fächer**: the single-station card, with four yellow compartment shapes, availability icons, timestamp, help dialog and collapsible header.
 - **DHL Packstation · Mehrere Stationen**: compact rows for comparing several stations, with S/M/L/XL, address, timestamp and separate freshness status per station.
 
-Use the visual card editor to select a station or restrict the overview to selected stations. Without a selection, the overview shows all configured stations. Above five compartments, the default is “many free”, as on DHL's page. Turn on exact counts in the editor if preferred. Renaming an entity or changing the system language does not break the station-to-sensor mapping. Clicking a compartment opens the corresponding HA more-info dialog.
+Use the visual card editor to select a station or restrict the overview to selected stations. In the overview editor, use the up and down buttons to reorder selected stations. The card follows the order of the `stations` list, including existing lists. Without a selection, the overview shows all configured stations in the default order (postal code, then station number). Above five compartments, the default is “many free”, as on DHL's page. Turn on exact counts in the editor if preferred. Renaming an entity or changing the system language does not break the station-to-sensor mapping. Clicking a compartment opens the corresponding HA more-info dialog.
 
 The cards use HA theme colors in light and dark mode. Unknown/stale/unreachable values have distinct neutral states and never appear as zero. Yellow shape heights illustrate compartment **size**, not occupancy.
 

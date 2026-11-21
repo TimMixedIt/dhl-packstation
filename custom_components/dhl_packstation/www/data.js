@@ -13,6 +13,8 @@ const translations = {
     missing: "Diese Packstation ist nicht verfügbar. Prüfe die Auswahl im Karteneditor.",
     fresh: "Aktuell", partial: "Teilweise Daten", stale: "Daten veraltet oder fehlend", offline: "Nicht erreichbar",
     station: "Packstation", title: "Titel", all: "Ohne Auswahl werden alle eingerichteten Stationen angezeigt.", exact: "Genaue Fachzahlen anzeigen", selection: "Stationen auswählen",
+    moveUp: "Nach oben verschieben", moveDown: "Nach unten verschieben", stationUnavailable: "Station nicht verfügbar",
+    orderHint: "Mit den Pfeilen legst du die Reihenfolge der ausgewählten Stationen fest.",
   },
   en: {
     free: "Free compartments", overview: "Packstations", sizes: "Compartment sizes:",
@@ -26,6 +28,8 @@ const translations = {
     missing: "This Packstation is unavailable. Check the selection in the card editor.",
     fresh: "Current", partial: "Partial data", stale: "Data stale or missing", offline: "Unreachable",
     station: "Packstation", title: "Title", all: "Leave the selection empty to show all configured stations.", exact: "Show exact compartment counts", selection: "Select stations",
+    moveUp: "Move up", moveDown: "Move down", stationUnavailable: "Station unavailable",
+    orderHint: "Use the arrows to set the order of the selected stations.",
   },
 };
 
@@ -59,6 +63,11 @@ export function stations(hass) {
   return [...groups.values()].sort((a, b) =>
     String(a.meta.postal_code).localeCompare(String(b.meta.postal_code)) ||
     Number(a.meta.station_number) - Number(b.meta.station_number));
+}
+
+export function selectedStations(items, ids) {
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return [...new Set(ids)].map((id) => byId.get(id)).filter(Boolean);
 }
 
 export function status(station) {

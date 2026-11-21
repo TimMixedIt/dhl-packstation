@@ -1,6 +1,6 @@
 # DHL Packstation – Installation
 
-Version: **0.2.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
+Version: **0.3.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
 
 ## Über Marketplace / HACS
 
@@ -24,7 +24,7 @@ Nach der Einrichtung den Browser einmal neu laden. Dann im Dashboard „Bearbeit
 - **DHL Packstation · Freie Fächer** für die Darstellung einer Station wie im DHL-Bild.
 - **DHL Packstation · Mehrere Stationen** für den Vergleich mehrerer Stationen.
 
-Die Karte im visuellen Editor auswählen und die Station(en) einstellen. Ohne Auswahl zeigt die Übersicht alle eingerichteten Stationen. „Genaue Fachzahlen anzeigen“ ersetzt „viele frei“ durch die konkrete Zahl. Ein Klick auf eine Fachgröße öffnet deren Sensorinformationen. Es ist kein zusätzliches Karten-Repository und kein manueller Ressourceneintrag nötig. Vorhandene Dashboards werden nicht automatisch verändert.
+Die Karte im visuellen Editor auswählen und die Station(en) einstellen. In der Übersicht kannst du die ausgewählten Stationen mit den Pfeiltasten nach oben oder unten verschieben. Die Karte übernimmt die Reihenfolge aus der `stations`-Liste, auch bei bereits bestehenden Listen. Ohne Auswahl zeigt die Übersicht alle eingerichteten Stationen, sortiert nach Postleitzahl und dann nach Stationsnummer. „Genaue Fachzahlen anzeigen“ ersetzt „viele frei“ durch die konkrete Zahl. Ein Klick auf eine Fachgröße öffnet deren Sensorinformationen. Es ist kein zusätzliches Karten-Repository und kein manueller Ressourceneintrag nötig. Vorhandene Dashboards werden nicht automatisch verändert.
 
 Die Abfrage erfolgt gemeinsam alle 15 Minuten. Unter den Optionen kannst du das maximale Alter der DHL-Daten festlegen. Standard sind 60 Minuten. Danach werden Fachzahlen nicht verfügbar, bis DHL wieder hinreichend aktuelle Daten liefert. Ein echter Nullwert bedeutet dagegen, dass DHL null freie Fächer dieser Größe gemeldet hat.
 

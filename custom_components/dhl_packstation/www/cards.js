@@ -1,4 +1,4 @@
-import { escapeHTML as esc, stations, text, validateConfig } from "./data.js";
+import { escapeHTML as esc, selectedStations, stations, text, validateConfig } from "./data.js";
 import { styles } from "./styles.js";
 import { chevron, helpDialog, locker, overviewView, singleView } from "./view.js";
 import "./editor.js";
@@ -40,7 +40,7 @@ class PackstationCard extends HTMLElement {
     if (!this._config) return;
     const labels = text(this._hass), all = stations(this._hass);
     this._items = this.overview
-      ? all.filter((item) => !this._config.stations?.length || this._config.stations.includes(item.id))
+      ? (this._config.stations?.length ? selectedStations(all, this._config.stations) : all)
       : all.filter((item) => item.id === (this._config.station || all[0]?.id));
     let body;
     if (!this._items.length) {

@@ -48,6 +48,9 @@ async def main():
             multi = page.locator("dhl-packstation-overview-card")
             assert await single.locator(".tile").count() == 4
             assert await multi.locator(".station").count() == 3
+            assert await multi.locator(".station").evaluate_all(
+                "items => items.map(item => item.getAttribute('aria-label'))"
+            ) == ["Packstation 182", "Packstation 101", "Packstation 189"]
             assert await single.locator(".count").all_text_contents() == [
                 "viele frei",
                 "4 frei",
@@ -167,6 +170,12 @@ async def main():
                 "multi.setConfig({type:'custom:dhl-packstation-overview-card',stations:['1-67141189']})"
             )
             assert await multi.locator(".station").count() == 1
+            await page.evaluate(
+                "multi.setConfig({type:'custom:dhl-packstation-overview-card',stations:['1-67141189','1-missing','1-33104182','1-67141189']})"
+            )
+            assert await multi.locator(".station").evaluate_all(
+                "items => items.map(item => item.getAttribute('aria-label'))"
+            ) == ["Packstation 189", "Packstation 182"]
             checks.append(
                 "selection, exact counts, stale, recovery, empty, escaped title and more-info"
             )
@@ -179,11 +188,105 @@ async def main():
             await editor.locator('select[name="station"]').select_option("1-33104182")
             assert await page.evaluate("window.edited.station") == "1-33104182"
             await page.evaluate(
-                "editor.setConfig({type:'custom:dhl-packstation-overview-card'})"
+                """() => {
+                    editor.setConfig({type:'custom:dhl-packstation-overview-card'});
+                    editor.addEventListener('config-changed', e => multi.setConfig(e.detail.config));
+                }"""
             )
             await editor.locator('input[name="stations"]').first.check()
             assert len(await page.evaluate("window.edited.stations")) == 1
-            checks.append("visual editor station and overview selections")
+            await editor.locator('input[name="stations"][value="1-67141189"]').check()
+            up = editor.get_by_role(
+                "button", name="Nach oben verschieben: Packstation 189", exact=False
+            )
+            await up.focus()
+            await page.keyboard.press("Enter")
+            assert await page.evaluate("window.edited.stations") == [
+                "1-67141189",
+                "1-33104182",
+            ]
+            assert await multi.locator(".station").evaluate_all(
+                "items => items.map(item => item.getAttribute('aria-label'))"
+            ) == ["Packstation 189", "Packstation 182"]
+            assert await up.evaluate("el => el === el.getRootNode().activeElement")
+            assert await up.is_disabled()
+            await page.keyboard.press("Enter")
+            assert await page.evaluate("window.edited.stations") == [
+                "1-67141189",
+                "1-33104182",
+            ]
+            down = editor.get_by_role(
+                "button", name="Nach unten verschieben: Packstation 189", exact=False
+            )
+            await down.click()
+            assert await page.evaluate("window.edited.stations") == [
+                "1-33104182",
+                "1-67141189",
+            ]
+            await up.click()
+            await page.evaluate(
+                """() => {
+                    const saved = JSON.parse(JSON.stringify(window.edited));
+                    editor.setConfig(saved);
+                    multi.setConfig(saved);
+                    const hass = makeHass();
+                    for (const entity of Object.keys(hass.states)) {
+                        if (hass.states[entity].attributes.dhl_packstation_id === '1-67141189') delete hass.states[entity];
+                    }
+                    editor.hass = hass;
+                    multi.hass = hass;
+                }"""
+            )
+            assert await multi.locator(".station").count() == 1
+            missing = editor.get_by_role(
+                "checkbox", name="Station nicht verfügbar · 1-67141189"
+            )
+            assert await missing.is_checked()
+            await editor.locator('input[name="stations"][value="1-35460101"]').check()
+            assert await page.evaluate("window.edited.stations") == [
+                "1-67141189",
+                "1-33104182",
+                "1-35460101",
+            ]
+            await missing.click()
+            assert await page.evaluate("window.edited.stations") == [
+                "1-33104182",
+                "1-35460101",
+            ]
+            assert await missing.count() == 0
+            await page.evaluate(
+                """() => {
+                    const config={...window.edited,stations:['1-67141189', ...window.edited.stations]};
+                    editor.setConfig(config);
+                    multi.setConfig(config);
+                }"""
+            )
+            await page.evaluate("editor.hass=makeHass(); multi.hass=makeHass()")
+            assert await multi.locator(".station").evaluate_all(
+                "items => items.map(item => item.getAttribute('aria-label'))"
+            ) == ["Packstation 189", "Packstation 182", "Packstation 101"]
+            for station_id in ["1-67141189", "1-33104182", "1-35460101"]:
+                await editor.locator(
+                    f'input[name="stations"][value="{station_id}"]'
+                ).uncheck()
+            assert await page.evaluate("window.edited.stations") == []
+            assert await multi.locator(".station").evaluate_all(
+                "items => items.map(item => item.getAttribute('aria-label'))"
+            ) == ["Packstation 182", "Packstation 101", "Packstation 189"]
+            checks.append(
+                "visual editor order, keyboard focus, reload, missing station recovery and reset"
+            )
+            await page.evaluate(
+                """() => {
+                    const config={type:'custom:dhl-packstation-overview-card',stations:['1-67141189','1-33104182','1-35460101']};
+                    editor.setConfig(config);
+                    multi.setConfig(config);
+                }"""
+            )
+            await page.set_viewport_size({"width": 320, "height": 1400})
+            assert await editor.locator("fieldset").evaluate(
+                "el => el.scrollWidth <= el.clientWidth + 1"
+            )
             axe_path = os.environ.get("AXE_CORE_PATH")
             if axe_path:
                 await page.add_script_tag(path=axe_path)
@@ -192,6 +295,10 @@ async def main():
                 )
                 assert not violations, json.dumps(violations)
                 checks.append("axe WCAG 2.1 A/AA")
+            await page.set_viewport_size({"width": 520, "height": 1800})
+            await editor.screenshot(
+                path=str(artifact_dir / "overview-order-editor.png")
+            )
             assert not errors, errors
             await browser.close()
     finally:
