@@ -4,7 +4,7 @@ Version: **0.2.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
 
 ## Über Marketplace / HACS
 
-Unter „Benutzerdefinierte Repositories“ die URL **https://github.com/TimMixedIt/dhl-packstation** mit Kategorie **Integration** hinzufügen und herunterladen. Danach HA neu starten und unter Geräte & Dienste „DHL Packstation“ hinzufügen. Die stabile Version **0.2.0** auswählen; Vorabversionen müssen dafür nicht aktiviert werden.
+In **HACS** nach **DHL Packstation** suchen und die Integration herunterladen. Ab Home Assistant 2026.11 findest du sie unter **Einstellungen → Marketplace**. Danach Home Assistant neu starten und unter **Einstellungen → Geräte & Dienste → Integration hinzufügen → DHL Packstation** deine Station einrichten.
 
 ## Manuell über ZIP
 
@@ -32,4 +32,4 @@ Falls du das frühere YAML-Beispiel installiert hast: Nach erfolgreichem Verglei
 
 Für ein Update den bisherigen Komponentenordner sichern, durch den neuen ersetzen und HA neu starten. Bei Problemen den gesicherten Ordner zurückkopieren und erneut starten. Zum Entfernen zuerst die Integrationseinträge in HA löschen, dann den Komponentenordner entfernen und HA neu starten.
 
-Die stabile Version ist als benutzerdefiniertes Repository verfügbar. Die Aufnahme in den allgemeinen Marketplace-Katalog ist beantragt und benötigt die Freigabe des HACS-Teams. Verbleibende praktische Prüfungen stehen im [Testplan](TESTPLAN_DE.md).
+Die Integration ist im allgemeinen HACS-/Marketplace-Katalog enthalten. Verbleibende praktische Prüfungen stehen im [Testplan](TESTPLAN_DE.md).

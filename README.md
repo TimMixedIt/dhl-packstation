@@ -2,7 +2,7 @@
 
 Home Assistant integration for the free S, M, L, and XL compartments of German DHL Packstations. Set up each station from the Home Assistant interface using its postal code and Packstation number. No DHL account or developer key is required.
 
-**Status: stable release, 0.2.0.** Available as a custom repository; not yet included in the default Marketplace catalog. This is an independent community project, not an official DHL product. See the verification section for test coverage and remaining field checks.
+This is an independent community project, not an official DHL product. See the verification section for test coverage and remaining field checks.
 
 [Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
 
@@ -30,7 +30,7 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 
 ### Marketplace / HACS
 
-Add **`https://github.com/TimMixedIt/dhl-packstation`** as a **custom repository**, category **Integration**, then download it. Restart Home Assistant and add **DHL Packstation** under Devices & services. Select the stable **0.2.0** release; enabling pre-release versions is not required.
+Search for **DHL Packstation** in **HACS**, or under **Settings → Marketplace** on Home Assistant 2026.11 and newer, and download the integration. Restart Home Assistant, then go to **Settings → Devices & services → Add integration → DHL Packstation** to set up your station.
 
 ### Manual ZIP installation
 
@@ -41,8 +41,6 @@ Add **`https://github.com/TimMixedIt/dhl-packstation`** as a **custom repository
 5. Open the device to see its entities. Diagnostics may appear in a separate section.
 
 No YAML configuration is used. If you tried the earlier REST example, remove that example yourself after verifying the new integration; its entities are separate and are not migrated or deleted automatically.
-
-For Home Assistant 2026.11 and newer, the Marketplace is under Settings. For older supported versions, use HACS.
 
 ## Dashboard cards
 
