@@ -1,6 +1,6 @@
 # DHL Packstation – Installation
 
-Version: **0.2.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
+Version: **0.3.0b1**, benötigt **Home Assistant 2026.10.4 oder neuer**.
 
 ## Über Marketplace / HACS
 
