@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Set a custom station order in the overview card using the existing `stations` list or the up and down buttons in the visual editor.
 
