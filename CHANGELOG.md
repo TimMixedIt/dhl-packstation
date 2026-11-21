@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Set a custom station order in the overview card using the existing `stations` list or the up and down buttons in the visual editor.
+
 ## 0.2.0
 
 - First stable release, promoting the tested 0.2.0b2 functionality without runtime changes.
