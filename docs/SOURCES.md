@@ -32,3 +32,14 @@ The 15-minute poll interval, configurable 60-minute default maximum data age and
 The cards display public station metadata from the integration's authenticated entity states. The static path contains code only. No third-party script host or external frontend library is used at runtime.
 
 - [CSS container queries](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries): card-local responsive lengths and breakpoints; verified in Chromium and WebKit.
+
+
+## Package alarm, history and map
+
+- [Actions in integrations](https://contributors.home-assistant.io/core/integrations/actions/): service registration and action descriptions.
+- [Mobile notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic/): existing mobile app notification actions.
+- [Sensors and measurement state class](https://contributors.home-assistant.io/core/entities/sensor/): numeric long-term statistics through Recorder.
+- [Custom cards and card helpers](https://contributors.home-assistant.io/frontend/custom-ui/card/) and [native Map card](https://www.home-assistant.io/dashboards/map/): create and configure a native map with station entities.
+- [Apple Maps URLs](https://developer.apple.com/documentation/mapkit/unified-map-urls) and [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started) describe links for opening directions to a destination.
+- [DHL describes expected utilization in its location finder](https://group.dhl.com/content/dam/deutschepostdhl/de/media-relations/press-releases/2026/pm-weihnachten-20261030.pdf). The [public station detail](https://www.dhl.de/int-postfinder/webservice/rest/v1/locationByPrimaryKeyPF/1-27777172) includes `packstn_utilization_mon` through `packstn_utilization_sun` as `type`/`content` entries in `pfOtherinfos`. The observed strings run from 1 to 3. The dashboard interprets the ordinal values as low to high utilization. The fields provide weekdays without calendar dates or live compartment counts.
+- [Postal-code search](https://www.dhl.de/int-postfinder/webservice/rest/v1/nearbySearch?address=27777&maxResults=20&locationType=PACKSTATION%2CDEIN_FACH): observed nearby candidates and distances reported by DHL. Unsupported location types are filtered locally and the selected identity is checked against its detail response.

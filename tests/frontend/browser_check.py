@@ -7,6 +7,7 @@ import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 from playwright.async_api import async_playwright
 
@@ -70,7 +71,7 @@ async def main():
                     )
                     for card in [single, multi]:
                         assert await card.evaluate(
-                            "element => [...element.shadowRoot.querySelectorAll('.grid,.tile,.metric')].every(el => el.scrollWidth <= el.clientWidth + 1)"
+                            "element => [...element.shadowRoot.querySelectorAll('.grid,.tile,.metric,.compare-row')].every(el => el.scrollWidth <= el.clientWidth + 1)"
                         )
                     checks.append(f"layout {theme} {width}px")
                 await page.set_viewport_size({"width": 768, "height": 1600})
@@ -183,6 +184,7 @@ async def main():
                 "window.editor = document.createElement('dhl-packstation-card-editor'); editor.setConfig({type:'custom:dhl-packstation-card',station:'1-67141189'}); editor.hass=makeHass(); editor.addEventListener('config-changed',e=>window.edited=e.detail.config); document.querySelector('#editor').replaceChildren(editor)"
             )
             editor = page.locator("dhl-packstation-card-editor")
+            assert await editor.locator('input[name="show_station_map"]').count() == 0
             await editor.locator('input[name="show_exact"]').check()
             assert await page.evaluate("window.edited.show_exact") is True
             await editor.locator('select[name="station"]').select_option("1-33104182")
@@ -284,16 +286,207 @@ async def main():
                 }"""
             )
             await page.set_viewport_size({"width": 320, "height": 1400})
-            assert await editor.locator("fieldset").evaluate(
-                "el => el.scrollWidth <= el.clientWidth + 1"
+            assert await editor.locator("fieldset").evaluate_all(
+                "groups => groups.every(el => el.scrollWidth <= el.clientWidth + 1)"
+            )
+            await page.evaluate("single.hass=makeHass(); multi.hass=makeHass()")
+            assert await single.locator(".week li").count() == 7
+            assert await single.locator(".week li.missing").count() == 2
+            assert await single.locator(".week li.none").count() == 1
+            assert await single.locator(".station-summary strong").inner_text() == "29"
+            await single.locator(".week").screenshot(
+                path=str(artifact_dir / "weekday-trend.png")
+            )
+
+            station_row = multi.get_by_role(
+                "region", name="Packstation 189", exact=True
+            )
+            details = station_row.locator(".station-toggle")
+            assert await details.get_attribute("aria-expanded") == "false"
+            await details.click()
+            assert await details.get_attribute("aria-expanded") == "true"
+            for service, host in [
+                ("Apple Karten", "maps.apple.com"),
+                ("Google Maps", "www.google.com"),
+            ]:
+                route = urlparse(
+                    await station_row.get_by_role(
+                        "link", name=f"{service} · Packstation 189"
+                    ).get_attribute("href")
+                )
+                assert route.hostname == host
+                assert parse_qs(route.query)["destination"] == ["49.42,8.41"]
+            await details.click()
+
+            tools = multi.locator("dhl-packstation-tools")
+            alarm_button = tools.locator('[data-panel="alarm"]')
+            map_button = tools.locator('[data-panel="map"]')
+            alarm_switch = editor.get_by_role("switch", name="Paketalarm anzeigen")
+            map_switch = editor.get_by_role("switch", name="Standortkarte anzeigen")
+            assert await alarm_switch.is_checked() and await map_switch.is_checked()
+            await map_switch.focus()
+            await page.keyboard.press("Space")
+            assert await page.evaluate("window.edited.show_station_map") is False
+            assert await map_button.count() == 0 and await alarm_button.count() == 1
+            await alarm_switch.uncheck()
+            assert await page.evaluate("window.edited.show_package_alarm") is False
+            assert not await tools.is_visible()
+            assert await multi.locator(".station").count() == 3
+            await alarm_switch.check()
+            assert await alarm_button.count() == 1 and await map_button.count() == 0
+            await map_switch.check()
+            await page.evaluate("editor.setConfig(structuredClone(window.edited))")
+            assert await alarm_switch.is_checked() and await map_switch.is_checked()
+            assert await map_button.count() == 1
+            assert not await page.evaluate("Boolean(window.mapConfig)")
+            await alarm_button.focus()
+            await page.keyboard.press("Enter")
+            assert await alarm_button.get_attribute("aria-expanded") == "true"
+            await tools.locator('input[name="s"]').fill("1")
+            await tools.locator('input[name="m"]').fill("2")
+            assert (
+                await multi.locator(".compare-result").inner_text()
+                == "1 von 3 Stationen passen"
+            )
+            assert await multi.locator(".compare-label").all_text_contents() == [
+                "Passt",
+                "Fehlt 1× S",
+                "Daten fehlen",
+            ]
+            assert await tools.locator(".station-fit").all_text_contents() == [
+                "Passt",
+                "Fehlt 1× S",
+                "Daten fehlen",
+            ]
+            assert await tools.locator('input[name="m"]').evaluate(
+                "el => el === el.getRootNode().activeElement"
+            )
+            assert (
+                await tools.locator('option[value="none"]').inner_text()
+                == "HA-Glocke (ohne Push)"
+            )
+            assert await tools.locator('select[name="notifier"]').evaluate(
+                "el => el.getBoundingClientRect().height >= 44"
+            )
+            for width in (320, 1024):
+                await page.set_viewport_size({"width": width, "height": 1400})
+                assert await tools.locator(".alarm").evaluate(
+                    "el => el.scrollWidth <= el.clientWidth + 1"
+                )
+            await page.set_viewport_size({"width": 320, "height": 1400})
+            assert "Eigene Messungen" in await single.locator(".week").inner_text()
+            await page.evaluate(
+                """() => {
+                    const hass=makeHass();
+                    delete hass.states["sensor.renamed_189_free_total"];
+                    const entity=hass.states["sensor.renamed_189_source_timestamp"];
+                    entity.state="unknown";
+                    entity.attributes.dhl_weekday_utilization={sun:2,mon:1,fri:3,sat:4};
+                    single.hass=hass;
+                }"""
+            )
+            forecast = single.locator(".forecast")
+            assert await forecast.locator(".trend-value").all_text_contents() == [
+                "1",
+                "–",
+                "–",
+                "–",
+                "3",
+                "–",
+                "2",
+            ]
+            assert (
+                await forecast.locator("li.level-3").get_attribute("aria-label")
+                == "Fr, Hohe Auslastung"
+            )
+            await forecast.screenshot(path=str(artifact_dir / "dhl-forecast.png"))
+            await page.evaluate("single.hass=makeHass()")
+            assert await single.locator(".forecast").count() == 0
+            await multi.locator(".compare").screenshot(
+                path=str(artifact_dir / "comparison.png")
+            )
+            await tools.locator('select[name="notifier"]').select_option(
+                "mobile_app_test_phone"
+            )
+            await tools.screenshot(path=str(artifact_dir / "package-alarm.png"))
+            await tools.get_by_role("button", name="Suche starten").click()
+            call = await page.evaluate("window.lastCall")
+            assert call == {
+                "domain": "dhl_packstation",
+                "action": "start_alarm",
+                "data": {
+                    "s": 1,
+                    "m": 2,
+                    "l": 0,
+                    "xl": 0,
+                    "stations": ["1-67141189", "1-33104182", "1-35460101"],
+                    "notifier": "mobile_app_test_phone",
+                },
+            }, call
+            await page.evaluate("""() => {
+                const hass = makeHass();
+                hass.states["sensor.renamed_189_free_total"].attributes.alarm = {
+                    status: "waiting", sizes: {s:1,m:2}, stations: ["1-67141189"]
+                };
+                multi.hass = hass;
+            }""")
+            await tools.get_by_role("button", name="Suche stoppen").click()
+            assert await page.evaluate("window.lastCall.action") == "stop_alarm"
+            assert (
+                await alarm_button.locator(".tool-state").inner_text() == "Suche läuft"
+            )
+            await map_button.click()
+            assert await alarm_button.get_attribute("aria-expanded") == "false"
+            assert await map_button.get_attribute("aria-expanded") == "true"
+            await tools.locator(".map-content ha-card").wait_for()
+            assert await page.evaluate("window.mapConfig.type") == "map"
+            assert (
+                await page.evaluate("window.mapConfig.entities[0].label_mode")
+                == "state"
+            )
+            assert (
+                await page.evaluate("window.mapConfig.entities[0].entity")
+                == "sensor.renamed_189_free_total"
+            )
+            assert await tools.locator(".map").get_by_role("link").count() == 2
+            await alarm_button.click()
+            assert not await tools.locator(".map").is_visible()
+            await map_button.click()
+            await tools.locator(".map-content ha-card").wait_for()
+            assert await tools.locator(".map-content ha-card").count() == 1
+            await map_switch.uncheck()
+            assert await tools.locator(".map-content").count() == 0
+            assert (
+                await multi.get_by_role("region", name="Packstation 189", exact=True)
+                .locator(".directions a")
+                .count()
+                == 2
+            )
+            await map_switch.check()
+            checks.append(
+                "independent switches, keyboard toolbar, alarm actions, DHL weekday outlook and lazy HA map"
             )
             axe_path = os.environ.get("AXE_CORE_PATH")
             if axe_path:
-                await page.add_script_tag(path=axe_path)
-                violations = await page.evaluate(
-                    "async () => (await axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))"
+                await page.evaluate("""() => {
+                    const hass = makeHass();
+                    hass.states["sensor.renamed_189_source_timestamp"].attributes.dhl_weekday_utilization = {mon:1,tue:2,sun:3};
+                    single.hass = hass;
+                    multi.hass = hass;
+                }""")
+                await (
+                    multi.get_by_role("region", name="Packstation 189", exact=True)
+                    .locator(".station-toggle")
+                    .click()
                 )
-                assert not violations, json.dumps(violations)
+                assert await multi.locator(".forecast").is_visible()
+                await page.add_script_tag(path=axe_path)
+                for panel in (alarm_button, map_button):
+                    await panel.click()
+                    violations = await page.evaluate(
+                        "async () => (await axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))"
+                    )
+                    assert not violations, json.dumps(violations)
                 checks.append("axe WCAG 2.1 A/AA")
             await page.set_viewport_size({"width": 520, "height": 1800})
             await editor.screenshot(

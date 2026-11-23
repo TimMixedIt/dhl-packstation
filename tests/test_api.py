@@ -14,6 +14,7 @@ from custom_components.dhl_packstation.api import (
     StationNotFound,
     normalize_location,
 )
+from custom_components.dhl_packstation.const import API_BASE
 
 from .conftest import DETAIL_URL, LOOKUP_URL
 
@@ -30,6 +31,34 @@ async def test_resolve(client, mock_dhl):
     assert station.address == "Industriestr. 10"
     assert station.source_timestamp == datetime(2026, 11, 12, 23, 58, tzinfo=UTC)
     assert mock_dhl.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        (
+            [
+                {"type": "packstn_utilization_sun", "content": "2"},
+                {"type": "packstn_utilization_mon", "content": "1"},
+                {"type": "packstn_utilization_fri", "content": "3"},
+                {"type": "packstn_utilization_tue", "content": "4"},
+                {"type": "packstn_utilization_thu", "content": True},
+                {"type": "packstn_utilization_wed", "content": {"level": 1}},
+                {"type": "packstn_utilization_unknown", "content": "1"},
+                {"type": ["packstn_utilization_sat"], "content": "1"},
+                None,
+            ],
+            {"mon": 1, "fri": 3, "sun": 2},
+        ),
+        (None, {}),
+        ({}, {}),
+    ],
+)
+async def test_weekday_utilization(client, aioclient_mock, station, fields, expected):
+    aioclient_mock.get(DETAIL_URL, json={**station, "pfOtherinfos": fields})
+    result = await client.async_get_station("1-67141189", "67141", "189")
+    assert result.weekday_utilization == expected
+    assert result.total == 28
 
 
 @pytest.mark.parametrize(
@@ -86,6 +115,34 @@ async def test_bad_lookup(client, aioclient_mock, response, error):
     aioclient_mock.get(LOOKUP_URL, json=response)
     with pytest.raises(error):
         await client.async_resolve("67141", "189")
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"zipCode": "27778"},
+        {"primaryKeyZipRegion": "607"},
+        {"locationType": "POSTFILIALE"},
+        {"locationType": []},
+    ],
+)
+async def test_wrong_deinfach_detail_rejected(client, aioclient_mock, station, changes):
+    station.update(
+        primaryKeyPF="13-27777606",
+        zipCode="27777",
+        primaryKeyZipRegion="606",
+        locationType="DEIN_FACH",
+    )
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=27777:606&maxResults=1",
+        json={"pfLocations": [station]},
+    )
+    aioclient_mock.get(
+        f"{API_BASE}/locationByPrimaryKeyPF/13-27777606", json={**station, **changes}
+    )
+    with pytest.raises(StationNotFound):
+        await client.async_resolve("27777", "606")
+    assert aioclient_mock.call_count == 2
 
 
 @pytest.mark.parametrize("primary_key", ["../bad", 123, None])

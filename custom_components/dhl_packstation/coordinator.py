@@ -10,6 +10,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .activity import PackstationActivity
 from .api import PackstationClient, PackstationData, PackstationError, RateLimited
 from .const import (
     CONF_MAX_AGE,
@@ -44,6 +45,7 @@ class PackstationCoordinator(DataUpdateCoordinator[PackstationData]):
         )
         self.client = client
         self.entry = entry
+        self.activity: PackstationActivity = hass.data[DOMAIN]
         self.max_age = timedelta(
             minutes=entry.options.get(CONF_MAX_AGE, DEFAULT_MAX_AGE)
         )
@@ -84,4 +86,5 @@ class PackstationCoordinator(DataUpdateCoordinator[PackstationData]):
             self._cancel_expiry = async_track_point_in_utc_time(
                 self.hass, self._expire_data, data.source_timestamp + self.max_age
             )
+        await self.activity.async_observe(data, self.max_age)
         return data

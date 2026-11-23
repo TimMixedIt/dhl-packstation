@@ -1,10 +1,13 @@
 """Test setup, entities, expiry, polling, errors, and unloading together."""
 
+import json
 from copy import deepcopy
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
@@ -27,8 +30,12 @@ async def setup(hass, entry):
 
 async def test_setup_entities(hass, entry, mock_dhl):
     await setup(hass, entry)
-    assert len(er.async_get(hass).entities) == 6
+    assert len(er.async_get(hass).entities) == 7
     assert mock_dhl.call_count == 1
+    total = hass.states.get(entity_id(hass, "free_total"))
+    assert total.state == "28"
+    assert total.attributes["state_class"] == "measurement"
+    assert len(total.attributes["week"]) == 7
     for size, count in {"s": 9, "m": 10, "l": 8, "xl": 1}.items():
         assert hass.states.get(entity_id(hass, f"free_{size}")).state == str(count)
     assert (
@@ -44,6 +51,83 @@ async def test_setup_entities(hass, entry, mock_dhl):
     )
     assert device is not None
     assert device.manufacturer == "DHL"
+
+
+async def test_deinfach_setup_and_refresh(hass, aioclient_mock):
+    """Resolve the reported station and poll the returned DHL identifier."""
+    station = json.loads((Path(__file__).parent / "fixtures/deinfach.json").read_text())
+    station_id = station["primaryKeyPF"]
+    url = f"{API_BASE}/locationByPrimaryKeyPF/{station_id}"
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=27777:606&maxResults=1",
+        json={"pfLocations": [station]},
+    )
+    aioclient_mock.get(url, json=station)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={"postal_code": "27777", "station_number": "606"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    entry = result["result"]
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == station_id
+    assert entry.data["primary_key"] == station_id
+    assert aioclient_mock.call_count == 3
+    device = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, station_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.manufacturer == "DeinFach"
+    assert device.configuration_url.endswith("?address=27777%3A606")
+    for size, count in {"s": "3", "m": "0", "l": "0", "xl": "0"}.items():
+        assert (
+            hass.states.get(entity_id(hass, f"free_{size}", station_id)).state == count
+        )
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, json={**station, "liveStatus": None})
+    await entry.runtime_data.async_refresh()
+    assert aioclient_mock.call_count == 1
+    assert hass.states.get(entity_id(hass, "free_s", station_id)).state == "unavailable"
+    assert (
+        hass.states.get(
+            entity_id(hass, "stale_data", station_id, "binary_sensor")
+        ).state
+        == "on"
+    )
+
+
+async def test_weekday_utilization_survives_missing_live_counts(
+    hass, entry, mock_dhl, station
+):
+    await setup(hass, entry)
+    total = entity_id(hass, "free_total")
+    timestamp = entity_id(hass, "source_timestamp")
+    assert "dhl_weekday_utilization" not in hass.states.get(timestamp).attributes
+
+    mock_dhl.clear_requests()
+    mock_dhl.get(
+        DETAIL_URL,
+        json={
+            **station,
+            "liveStatus": None,
+            "pfOtherinfos": [{"type": "packstn_utilization_sun", "content": "2"}],
+        },
+    )
+    await entry.runtime_data.async_refresh()
+    assert mock_dhl.call_count == 1
+    assert hass.states.get(total).state == "unavailable"
+    assert hass.states.get(timestamp).state == "unknown"
+    assert hass.states.get(timestamp).attributes["dhl_weekday_utilization"] == {
+        "sun": 2
+    }
+
+    mock_dhl.clear_requests()
+    mock_dhl.get(DETAIL_URL, status=503)
+    await entry.runtime_data.async_refresh()
+    assert "dhl_weekday_utilization" not in hass.states.get(timestamp).attributes
 
 
 async def test_german_names_and_unit_translation(hass, entry, mock_dhl):
@@ -140,6 +224,7 @@ async def test_one_invalid_size_leaves_other_sizes(
     await setup(hass, entry)
     assert hass.states.get(entity_id(hass, "free_s")).state == "unavailable"
     assert hass.states.get(entity_id(hass, "free_m")).state == "10"
+    assert hass.states.get(entity_id(hass, "free_total")).state == "unavailable"
 
 
 async def test_setup_failure_retries(hass, entry, aioclient_mock):
@@ -199,6 +284,6 @@ async def test_multiple_stations_are_independent(hass, entry, mock_dhl, station)
     )
     other_entry.add_to_hass(hass)
     await setup(hass, other_entry)
-    assert len(er.async_get(hass).entities) == 12
+    assert len(er.async_get(hass).entities) == 14
     assert hass.states.get(entity_id(hass, "free_s")).state == "9"
     assert hass.states.get(entity_id(hass, "free_s", station="1-33104182")).state == "0"

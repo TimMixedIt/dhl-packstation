@@ -1,0 +1,35 @@
+start_alarm:
+  fields:
+    stations:
+      required: true
+      selector:
+        text:
+          multiple: true
+    s:
+      selector:
+        number:
+          min: 0
+          max: 99
+          mode: box
+    m:
+      selector:
+        number:
+          min: 0
+          max: 99
+          mode: box
+    l:
+      selector:
+        number:
+          min: 0
+          max: 99
+          mode: box
+    xl:
+      selector:
+        number:
+          min: 0
+          max: 99
+          mode: box
+    notifier:
+      selector:
+        text:
+stop_alarm:

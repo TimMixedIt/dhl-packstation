@@ -56,7 +56,9 @@ test("timestamps use the configured zone and invalid values remain unknown", () 
 });
 
 test("configuration validation rejects malformed inputs", () => {
-  for (const input of [null, { station: 1 }, { station: "" }, { title: {} }, { show_exact: "false" }, { stations: "all" }, { stations: [null] }]) assert.throws(() => validateConfig(input, true));
+  for (const input of [null, { station: 1 }, { station: "" }, { title: {} }, { show_exact: "false" }, { show_package_alarm: "false" }, { show_station_map: null }, { stations: "all" }, { stations: [null] }]) assert.throws(() => validateConfig(input, true));
+  const hiddenTools = { show_package_alarm: false, show_station_map: false };
+  assert.deepEqual(validateConfig(hiddenTools, true), hiddenTools);
   assert.deepEqual(validateConfig({ type: "custom:dhl-packstation-card" }, false), { type: "custom:dhl-packstation-card" });
 });
 
@@ -68,4 +70,28 @@ test("all data interpolated into HTML is escaped", () => {
   const html = overviewView([station], {}, hass) + singleView(station, {}, hass);
   assert.ok(!html.includes("<script>"));
   assert.ok(!html.includes("<img"));
+});
+
+test("package fit uses exact sizes, real zero, and only fresh known counts", async () => {
+  const { packageFit } = await import("../../custom_components/dhl_packstation/www/station-view.js");
+  const station = fixture();
+  assert.equal(packageFit(station, {s: 0, m: 0}), null);
+  assert.deepEqual(packageFit(station, {s: 1, m: 2}), {state: "fits"});
+  station.entities.free_m.state = "0";
+  assert.deepEqual(packageFit(station, {s: 1, m: 2}), {state: "shortage", shortages: ["2× M"]});
+  station.entities.free_m.state = "unavailable";
+  assert.deepEqual(packageFit(station, {s: 1, m: 2}), {state: "noData"});
+  station.entities.stale_data.state = "on";
+  assert.deepEqual(packageFit(station, {s: 1}), {state: "noData"});
+});
+
+test("route links encode only verified station coordinates", async () => {
+  const { directions } = await import("../../custom_components/dhl_packstation/www/station-view.js");
+  const station = fixture();
+  station.entities.free_total = {attributes: {latitude: 49.42, longitude: 8.41}};
+  const links = directions(station, hass);
+  assert.match(links, /https:\/\/maps\.apple\.com\/directions\?destination=49\.42%2C8\.41/);
+  assert.match(links, /https:\/\/www\.google\.com\/maps\/dir\/\?api=1&amp;destination=49\.42%2C8\.41/);
+  station.entities.free_total.attributes.latitude = 91;
+  assert.equal(directions(station, hass), "");
 });

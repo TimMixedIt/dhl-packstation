@@ -4,10 +4,16 @@
     "step": {
       "user": {
         "title": "Add a Packstation",
-        "description": "Enter the postal code of the station and its Packstation number. No DHL account is required. Free compartment data may not be available at every station.",
+        "description": "Enter the postal code and number of your DHL Packstation or DeinFach locker listed in the DHL location finder. No DHL account is required. Free compartment data may not be available at every station. Leave the number blank to find nearby lockers.",
         "data": {
           "postal_code": "Postal code",
           "station_number": "Packstation number"
+        }
+      },
+      "nearby": {
+        "title": "Choose a nearby station",
+        "data": {
+          "primary_key": "Station"
         }
       }
     },
@@ -52,12 +58,52 @@
       },
       "source_timestamp": {
         "name": "DHL data timestamp"
+      },
+      "free_total": {
+        "name": "Free compartments total",
+        "unit_of_measurement": "compartments"
       }
     },
     "binary_sensor": {
       "stale_data": {
         "name": "DHL data stale or missing"
       }
+    }
+  },
+  "services": {
+    "start_alarm": {
+      "name": "Start package alarm",
+      "description": "Notify once when a selected station has enough free compartments.",
+      "fields": {
+        "stations": {
+          "name": "Station IDs",
+          "description": "DHL identifiers of configured stations."
+        },
+        "s": {
+          "name": "S",
+          "description": "Number of packages of this size."
+        },
+        "m": {
+          "name": "M",
+          "description": "Number of packages of this size."
+        },
+        "l": {
+          "name": "L",
+          "description": "Number of packages of this size."
+        },
+        "xl": {
+          "name": "XL",
+          "description": "Number of packages of this size."
+        },
+        "notifier": {
+          "name": "Notification channel",
+          "description": "Mobile app action name without notify. Leave blank for a Home Assistant notification."
+        }
+      }
+    },
+    "stop_alarm": {
+      "name": "Stop package alarm",
+      "description": "Clear the current package request."
     }
   }
 }

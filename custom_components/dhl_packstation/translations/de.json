@@ -4,10 +4,16 @@
     "step": {
       "user": {
         "title": "Packstation hinzufügen",
-        "description": "Gib die Postleitzahl des Standorts und die Packstationsnummer ein. Ein DHL-Konto ist nicht erforderlich. Nicht jede Station liefert freie Fachzahlen.",
+        "description": "Gib die Postleitzahl und Nummer deiner DHL-Packstation oder deines im DHL-Standortfinder gelisteten DeinFach-Automaten ein. Ein DHL-Konto ist nicht erforderlich. Nicht jede Station liefert freie Fachzahlen. Lass die Nummer für die Umgebungssuche frei.",
         "data": {
           "postal_code": "Postleitzahl",
           "station_number": "Packstationsnummer"
+        }
+      },
+      "nearby": {
+        "title": "Station in der Umgebung wählen",
+        "data": {
+          "primary_key": "Station"
         }
       }
     },
@@ -52,12 +58,52 @@
       },
       "source_timestamp": {
         "name": "DHL-Datenstand"
+      },
+      "free_total": {
+        "name": "Freie Fächer gesamt",
+        "unit_of_measurement": "Fächer"
       }
     },
     "binary_sensor": {
       "stale_data": {
         "name": "DHL-Daten veraltet oder fehlend"
       }
+    }
+  },
+  "services": {
+    "start_alarm": {
+      "name": "Paketalarm starten",
+      "description": "Einmal benachrichtigen, wenn an einer ausgewählten Station genug Fächer frei sind.",
+      "fields": {
+        "stations": {
+          "name": "Stationskennungen",
+          "description": "DHL-Kennungen der eingerichteten Stationen."
+        },
+        "s": {
+          "name": "S",
+          "description": "Anzahl der Pakete in dieser Größe."
+        },
+        "m": {
+          "name": "M",
+          "description": "Anzahl der Pakete in dieser Größe."
+        },
+        "l": {
+          "name": "L",
+          "description": "Anzahl der Pakete in dieser Größe."
+        },
+        "xl": {
+          "name": "XL",
+          "description": "Anzahl der Pakete in dieser Größe."
+        },
+        "notifier": {
+          "name": "Benachrichtigungskanal",
+          "description": "Name der mobile_app-Aktion ohne notify. Leer lassen für eine Home-Assistant-Meldung."
+        }
+      }
+    },
+    "stop_alarm": {
+      "name": "Paketalarm stoppen",
+      "description": "Den aktuellen Paketbedarf löschen."
     }
   }
 }

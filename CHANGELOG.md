@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- Support DeinFach lockers listed by DHL, including live compartment counts when DHL provides them.
+- Start a persistent one-time package alarm for a mix of exact sizes from the overview card.
+- Show total free compartments, Home Assistant long-term statistics, and a measured weekday trend.
+- Add postal-code search for nearby lockers and show configured stations on the map.
+- Compare station capacity in a compact view and check package fit before starting an alarm.
+- Open directions in Apple Maps or Google Maps and clarify where alarm notifications appear.
+- Show DHL's weekday utilization when available, with the local weekday trend as a fallback.
+- Update the alarm and map panels with a shared toolbar and independent visibility settings.
+
 ## 0.3.0
 
 - Set a custom station order in the overview card using the existing `stations` list or the up and down buttons in the visual editor.

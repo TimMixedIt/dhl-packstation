@@ -1,6 +1,6 @@
 # DHL Packstation – Installation
 
-Version: **0.3.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
+Version: **0.4.0**, benötigt **Home Assistant 2026.10.4 oder neuer**.
 
 ## Über Marketplace / HACS
 
@@ -13,9 +13,11 @@ In **HACS** nach **DHL Packstation** suchen und die Integration herunterladen. A
 3. Den enthaltenen Ordner `custom_components/dhl_packstation` in deinen HA-Konfigurationsordner kopieren. Der fertige Pfad muss `<HA-Konfigurationsordner>/custom_components/dhl_packstation/manifest.json` enthalten. Es darf kein zusätzlicher Unterordner `dhl-packstation` dazwischenliegen.
 4. Home Assistant neu starten.
 5. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach **DHL Packstation** suchen.
-6. Die Postleitzahl des Stationsstandorts und die Packstationsnummer eingeben.
+6. Die Postleitzahl und Nummer der Station eingeben. Für die Umgebungssuche nur die PLZ eingeben und die Nummer freilassen.
 
-Die Integration erzeugt ein Gerät pro Station mit vier Fachzahlsensoren für S/M/L/XL sowie zwei Diagnosewerten: DHL-Datenstand und „DHL-Daten veraltet oder fehlend“. Weitere Stationen werden durch erneutes Hinzufügen der Integration eingerichtet.
+Im DHL-Standortfinder gelistete DeinFach-Automaten richtest du ebenfalls mit Standort-PLZ und Stationsnummer ein. Freie Fächer werden angezeigt, soweit DHL aktuelle Zahlen meldet.
+
+Die Integration erzeugt ein Gerät pro Station mit vier Fachzahlsensoren für S/M/L/XL, einer Gesamtzahl und zwei Diagnosewerten: DHL-Datenstand und „DHL-Daten veraltet oder fehlend“. Weitere Stationen werden durch erneutes Hinzufügen der Integration eingerichtet.
 
 ## Die mitgelieferten Karten
 
@@ -25,6 +27,14 @@ Nach der Einrichtung den Browser einmal neu laden. Dann im Dashboard „Bearbeit
 - **DHL Packstation · Mehrere Stationen** für den Vergleich mehrerer Stationen.
 
 Die Karte im visuellen Editor auswählen und die Station(en) einstellen. In der Übersicht kannst du die ausgewählten Stationen mit den Pfeiltasten nach oben oder unten verschieben. Die Karte übernimmt die Reihenfolge aus der `stations`-Liste, auch bei bereits bestehenden Listen. Ohne Auswahl zeigt die Übersicht alle eingerichteten Stationen, sortiert nach Postleitzahl und dann nach Stationsnummer. „Genaue Fachzahlen anzeigen“ ersetzt „viele frei“ durch die konkrete Zahl. Ein Klick auf eine Fachgröße öffnet deren Sensorinformationen. Es ist kein zusätzliches Karten-Repository und kein manueller Ressourceneintrag nötig. Vorhandene Dashboards werden nicht automatisch verändert.
+
+Die Mehrstationskarte zeigt die freien Fächer je Größe in einer Zeile pro Station. Tippe auf einen Stationsnamen für Adresse, Aktualisierungszeit und Route. Im **Paketalarm** siehst du schon beim Eingeben, welche Station zum Beispiel **1× S und 2× M** aufnehmen kann und welche Fächer noch fehlen.
+
+Wähle für einen Alarm die Stationen aus und drücke **Suche starten**. **HA-Glocke (ohne Push)** legt die Meldung in der Home-Assistant-Glocke ab. Für eine Push-Nachricht wählst du ein Gerät mit eingerichteter Home-Assistant-App und erlaubten Benachrichtigungen. Der Alarm meldet sich einmal, sobald eine ausgewählte Station für alle eingegebenen Pakete gleichzeitig passende Fächer meldet. Steuerung und Einrichtung erfordern ein HA-Administratorkonto.
+
+Die Routenlinks öffnen **Apple Karten** oder **Google Maps**. Die **Standortkarte** zeigt die Standorte gemeinsam in Home Assistant. Im Editor der Mehrstationskarte kannst du unter **Anzeige** den Paketalarm und die Standortkarte einzeln ein- oder ausblenden. Beide sind standardmäßig sichtbar. Ein laufender Paketalarm läuft auch nach dem Ausblenden weiter.
+
+**DHL-Auslastung nach Wochentag** erscheint in der Einzelkarte und den aufklappbaren Stationsdetails, wenn DHL Werte für den Standort liefert. Die Stufen beschreiben die erwartete Auslastung der gesamten Station. Fehlt die DHL-Angabe, zeigt die Einzelkarte den **Wochentrend** aus bis zu acht Wochen eigener Messungen. Dafür braucht jeder Wochentag mindestens zwei beobachtete Tage. Die Fachsensoren unterstützen außerdem die Langzeitstatistik des HA-Recorders.
 
 Die Abfrage erfolgt gemeinsam alle 15 Minuten. Unter den Optionen kannst du das maximale Alter der DHL-Daten festlegen. Standard sind 60 Minuten. Danach werden Fachzahlen nicht verfügbar, bis DHL wieder hinreichend aktuelle Daten liefert. Ein echter Nullwert bedeutet dagegen, dass DHL null freie Fächer dieser Größe gemeldet hat.
 
