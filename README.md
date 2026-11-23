@@ -76,6 +76,8 @@ type: custom:dhl-packstation-overview-card
 stations:
   - "1-67141189"
   - "1-33104182"
+show_station_map: false
+show_package_alarm: true
 ```
 
 Station identifiers can be read from the entities' `dhl_packstation_id` attribute; they are also selected directly by name in the editor.
@@ -87,6 +89,8 @@ The multi-station card compares free compartments by size in one row per station
 To start an alarm as a Home Assistant administrator, select the stations to watch and choose a notification destination. **HA inbox (no push)** places a message in Home Assistant's notification bell. Choose a device registered with the Companion app for push. The alarm fires once when one selected station reports enough fresh compartments, including immediately on start if applicable. The request survives a Home Assistant restart. Use **Stop search** to cancel or **New search** to clear a completed request. Automations can use `dhl_packstation.start_alarm` and `dhl_packstation.stop_alarm`.
 
 Station directions open in **Apple Maps** or **Google Maps**. **Station map** shows the configured stations together inside Home Assistant. Use the integration's setup wizard to find and add nearby stations by postal code.
+
+In the overview card editor, use **Display** to toggle the package alarm and station map independently. Both are shown by default. Hiding the alarm from a card leaves an active search running.
 
 The single-station card and expanded station rows show **DHL utilization by weekday** when DHL supplies it. Each level is an outlook for the station as a whole. On stations without a DHL estimate, the single-station card shows a **weekday trend** from up to eight weeks of local measurements. It displays the median of observed daily medians after at least two observed dates per weekday.
 

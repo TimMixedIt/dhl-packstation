@@ -15,6 +15,7 @@ const translations = {
     station: "Packstation", title: "Titel", all: "Ohne Auswahl werden alle eingerichteten Stationen angezeigt.", exact: "Genaue Fachzahlen anzeigen", selection: "Stationen auswählen",
     moveUp: "Nach oben verschieben", moveDown: "Nach unten verschieben", stationUnavailable: "Station nicht verfügbar",
     orderHint: "Mit den Pfeilen legst du die Reihenfolge der ausgewählten Stationen fest.",
+    cardOptions: "Anzeige", showAlarm: "Paketalarm anzeigen", showMap: "Standortkarte anzeigen",
   },
   en: {
     free: "Free compartments", overview: "Packstations", sizes: "Compartment sizes:",
@@ -30,6 +31,7 @@ const translations = {
     station: "Packstation", title: "Title", all: "Leave the selection empty to show all configured stations.", exact: "Show exact compartment counts", selection: "Select stations",
     moveUp: "Move up", moveDown: "Move down", stationUnavailable: "Station unavailable",
     orderHint: "Use the arrows to set the order of the selected stations.",
+    cardOptions: "Display", showAlarm: "Show package alarm", showMap: "Show station map",
   },
 };
 
@@ -102,7 +104,9 @@ export function validateConfig(config, overview) {
   if (!config || typeof config !== "object") throw new Error("Card configuration is required");
   if (config.station !== undefined && (typeof config.station !== "string" || !config.station.trim())) throw new Error("station must be a station identifier");
   if (config.title !== undefined && typeof config.title !== "string") throw new Error("title must be text");
-  if (config.show_exact !== undefined && typeof config.show_exact !== "boolean") throw new Error("show_exact must be true or false");
+  for (const key of overview ? ["show_exact", "show_package_alarm", "show_station_map"] : ["show_exact"]) {
+    if (config[key] !== undefined && typeof config[key] !== "boolean") throw new Error(`${key} must be true or false`);
+  }
   if (overview && config.stations !== undefined && (!Array.isArray(config.stations) || config.stations.some((id) => typeof id !== "string" || !id.trim()))) throw new Error("stations must be a list of station identifiers");
   return { ...config };
 }

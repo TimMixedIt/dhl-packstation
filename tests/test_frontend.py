@@ -30,6 +30,7 @@ async def test_cards_register_once_per_integration(hass):
             "styles.js",
             "editor.js",
             "tools.js",
+            "tools-view.js",
             "station-view.js",
         ]:
             assert (Path(config.path) / name).is_file()

@@ -56,7 +56,9 @@ test("timestamps use the configured zone and invalid values remain unknown", () 
 });
 
 test("configuration validation rejects malformed inputs", () => {
-  for (const input of [null, { station: 1 }, { station: "" }, { title: {} }, { show_exact: "false" }, { stations: "all" }, { stations: [null] }]) assert.throws(() => validateConfig(input, true));
+  for (const input of [null, { station: 1 }, { station: "" }, { title: {} }, { show_exact: "false" }, { show_package_alarm: "false" }, { show_station_map: null }, { stations: "all" }, { stations: [null] }]) assert.throws(() => validateConfig(input, true));
+  const hiddenTools = { show_package_alarm: false, show_station_map: false };
+  assert.deepEqual(validateConfig(hiddenTools, true), hiddenTools);
   assert.deepEqual(validateConfig({ type: "custom:dhl-packstation-card" }, false), { type: "custom:dhl-packstation-card" });
 });
 

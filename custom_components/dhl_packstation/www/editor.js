@@ -16,7 +16,7 @@ class PackstationCardEditor extends HTMLElement {
     const config = { ...this._config };
     if (input.name === "title") config.title = input.value;
     if (input.name === "station") config.station = input.value;
-    if (input.name === "show_exact") config.show_exact = input.checked;
+    if (["show_exact", "show_package_alarm", "show_station_map"].includes(input.name)) config[input.name] = input.checked;
     if (input.name === "stations") {
       const selected = new Set(config.stations);
       if (input.checked) selected.add(input.value);
@@ -71,11 +71,22 @@ class PackstationCardEditor extends HTMLElement {
       .station-option { display:grid; grid-template-columns:minmax(0,1fr) repeat(2,auto); align-items:center; gap:4px; }
       .station-option button { min-width:44px; min-height:44px; padding:0; border:1px solid var(--divider-color,#888); border-radius:6px; background:var(--card-background-color); color:inherit; font-size:18px; cursor:pointer; }
       .station-option button[aria-disabled="true"] { opacity:.45; cursor:default; }
+      .display { border:0; border-top:1px solid var(--divider-color,#888); border-radius:0; margin-inline:0; padding:4px 0 0; }
+      .display legend { font-weight:600; padding:0 8px 0 0; }
+      .switch { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; cursor:pointer; }
+      .switch input { appearance:none; box-sizing:border-box; flex:none; width:40px; height:24px; margin:0; border:1px solid var(--secondary-text-color,#888); border-radius:16px; background:var(--secondary-background-color,#ddd); display:grid; align-items:center; padding:3px; cursor:pointer; }
+      .switch input::before { content:""; width:16px; height:16px; border-radius:50%; background:var(--secondary-text-color,#777); }
+      .switch input:checked { background:#fbd443; border-color:#fbd443; }
+      .switch input:checked::before { transform:translateX(16px); background:#171717; }
       p { color:var(--secondary-text-color); font-size:13px; } :focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
     </style>
     <label class="field">${esc(labels.title)}<input type="text" name="title" value="${esc(this._config.title ?? "")}" placeholder="${esc(overview ? labels.overview : labels.free)}"></label>
     ${overview ? `<fieldset><legend>${esc(labels.selection)}</legend><p>${esc(labels.all)} ${esc(labels.orderHint)}</p>${options}</fieldset>` : `<label class="field">${esc(labels.station)}<select name="station">${options || `<option value="">${esc(labels.empty)}</option>`}</select></label>`}
-    <label class="check"><input type="checkbox" name="show_exact" ${this._config.show_exact ? "checked" : ""}>${esc(labels.exact)}</label>`;
+    <fieldset class="display"><legend>${esc(labels.cardOptions)}</legend>
+      <label class="switch">${esc(labels.exact)}<input type="checkbox" role="switch" name="show_exact" ${this._config.show_exact ? "checked" : ""}></label>
+      ${overview ? `<label class="switch">${esc(labels.showAlarm)}<input type="checkbox" role="switch" name="show_package_alarm" ${this._config.show_package_alarm !== false ? "checked" : ""}></label>
+      <label class="switch">${esc(labels.showMap)}<input type="checkbox" role="switch" name="show_station_map" ${this._config.show_station_map !== false ? "checked" : ""}></label>` : ""}
+    </fieldset>`;
     if (html === this._html) return;
     const focused = this.shadowRoot.activeElement;
     this._html = html;
@@ -88,6 +99,8 @@ class PackstationCardEditor extends HTMLElement {
       const inputs = [...this.shadowRoot.querySelectorAll('input[name="stations"]')];
       const replacement = inputs.find((input) => input.value === focused.value) ?? inputs[0];
       replacement?.focus({ preventScroll: true });
+    } else if (focused?.matches('input[role="switch"]')) {
+      this.shadowRoot.querySelector(`input[name="${focused.name}"]`)?.focus({ preventScroll: true });
     }
   }
 }

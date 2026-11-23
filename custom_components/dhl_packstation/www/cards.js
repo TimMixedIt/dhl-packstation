@@ -63,7 +63,7 @@ class PackstationCard extends HTMLElement {
     const title = this._config.title || (this.overview ? labels.overview : labels.free);
     const html = `<style>${styles}</style><ha-card><details open><summary>${locker}<span>${esc(title)}</span>${chevron}</summary>${body}</details>${helpDialog(this._hass)}</ha-card>`;
     if (html === this._html) {
-      this._tools?.update(this._hass, this._items, all);
+      this._tools?.update(this._hass, this._items, all, this._config);
       this._updateComparison();
       return;
     }
@@ -80,7 +80,7 @@ class PackstationCard extends HTMLElement {
         this._tools.addEventListener("packstation-demand", () => this._updateComparison());
       }
       this.shadowRoot.querySelector(".overview").prepend(this._tools);
-      this._tools.update(this._hass, this._items, all);
+      this._tools.update(this._hass, this._items, all, this._config);
       this._updateComparison();
     }
     if (dialogOpen) this.shadowRoot.querySelector("dialog").showModal();
