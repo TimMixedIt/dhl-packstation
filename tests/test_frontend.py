@@ -33,7 +33,7 @@ async def test_cards_register_once_per_integration(hass):
             "station-view.js",
         ]:
             assert (Path(config.path) / name).is_file()
-    assert hass.data[DATA_EXTRA_MODULE_URL] == {"/dhl_packstation/cards.js?v=0.3.0"}
+    assert hass.data[DATA_EXTRA_MODULE_URL] == {"/dhl_packstation/cards.js?v=0.4.0b3"}
 
 
 async def test_static_modules_are_served(hass, hass_client):
