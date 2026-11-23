@@ -99,6 +99,37 @@ async def test_deinfach_setup_and_refresh(hass, aioclient_mock):
     )
 
 
+async def test_weekday_utilization_survives_missing_live_counts(
+    hass, entry, mock_dhl, station
+):
+    await setup(hass, entry)
+    total = entity_id(hass, "free_total")
+    timestamp = entity_id(hass, "source_timestamp")
+    assert "dhl_weekday_utilization" not in hass.states.get(timestamp).attributes
+
+    mock_dhl.clear_requests()
+    mock_dhl.get(
+        DETAIL_URL,
+        json={
+            **station,
+            "liveStatus": None,
+            "pfOtherinfos": [{"type": "packstn_utilization_sun", "content": "2"}],
+        },
+    )
+    await entry.runtime_data.async_refresh()
+    assert mock_dhl.call_count == 1
+    assert hass.states.get(total).state == "unavailable"
+    assert hass.states.get(timestamp).state == "unknown"
+    assert hass.states.get(timestamp).attributes["dhl_weekday_utilization"] == {
+        "sun": 2
+    }
+
+    mock_dhl.clear_requests()
+    mock_dhl.get(DETAIL_URL, status=503)
+    await entry.runtime_data.async_refresh()
+    assert "dhl_weekday_utilization" not in hass.states.get(timestamp).attributes
+
+
 async def test_german_names_and_unit_translation(hass, entry, mock_dhl):
     hass.config.language = "de"
     await setup(hass, entry)

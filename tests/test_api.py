@@ -34,6 +34,34 @@ async def test_resolve(client, mock_dhl):
 
 
 @pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        (
+            [
+                {"type": "packstn_utilization_sun", "content": "2"},
+                {"type": "packstn_utilization_mon", "content": "1"},
+                {"type": "packstn_utilization_fri", "content": "3"},
+                {"type": "packstn_utilization_tue", "content": "4"},
+                {"type": "packstn_utilization_thu", "content": True},
+                {"type": "packstn_utilization_wed", "content": {"level": 1}},
+                {"type": "packstn_utilization_unknown", "content": "1"},
+                {"type": ["packstn_utilization_sat"], "content": "1"},
+                None,
+            ],
+            {"mon": 1, "fri": 3, "sun": 2},
+        ),
+        (None, {}),
+        ({}, {}),
+    ],
+)
+async def test_weekday_utilization(client, aioclient_mock, station, fields, expected):
+    aioclient_mock.get(DETAIL_URL, json={**station, "pfOtherinfos": fields})
+    result = await client.async_get_station("1-67141189", "67141", "189")
+    assert result.weekday_utilization == expected
+    assert result.total == 28
+
+
+@pytest.mark.parametrize(
     "postal,number",
     [
         ("1234", "1"),

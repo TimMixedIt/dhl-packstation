@@ -88,7 +88,7 @@ To start an alarm as a Home Assistant administrator, select the stations to watc
 
 Station directions open in **Apple Maps** or **Google Maps**. **Station map** shows the configured stations together inside Home Assistant. Use the integration's setup wizard to find and add nearby stations by postal code.
 
-The single-station card shows a **weekday trend** from the integration's own measurements. It retains the first complete sample per local hour over eight weeks. Each weekday shows the median of its observed daily medians, with at least two observed dates required. The colors indicate zero, fewer than six, or six or more typical free compartments. A dash indicates insufficient history and is expected on a new install. DHL offers an expected-utilization view in its own location finder. The station detail responses checked for this integration contain live counts and a timestamp.
+The single-station card and expanded station rows show **DHL utilization by weekday** when DHL supplies it. Each level is an outlook for the station as a whole. On stations without a DHL estimate, the single-station card shows a **weekday trend** from up to eight weeks of local measurements. It displays the median of observed daily medians after at least two observed dates per weekday.
 
 The four size sensors and the total sensor also support Home Assistant long-term statistics through Recorder. The total is unavailable when any size is missing or stale.
 

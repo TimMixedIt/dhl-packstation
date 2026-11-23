@@ -343,6 +343,33 @@ async def main():
                 == "HA-Glocke (ohne Push)"
             )
             assert "Eigene Messungen" in await single.locator(".week").inner_text()
+            await page.evaluate(
+                """() => {
+                    const hass=makeHass();
+                    delete hass.states["sensor.renamed_189_free_total"];
+                    const entity=hass.states["sensor.renamed_189_source_timestamp"];
+                    entity.state="unknown";
+                    entity.attributes.dhl_weekday_utilization={sun:2,mon:1,fri:3,sat:4};
+                    single.hass=hass;
+                }"""
+            )
+            forecast = single.locator(".forecast")
+            assert await forecast.locator(".trend-value").all_text_contents() == [
+                "1",
+                "–",
+                "–",
+                "–",
+                "3",
+                "–",
+                "2",
+            ]
+            assert (
+                await forecast.locator("li.level-3").get_attribute("aria-label")
+                == "Fr, Hohe Auslastung"
+            )
+            await forecast.screenshot(path=str(artifact_dir / "dhl-forecast.png"))
+            await page.evaluate("single.hass=makeHass()")
+            assert await single.locator(".forecast").count() == 0
             await multi.locator(".compare").screenshot(
                 path=str(artifact_dir / "comparison.png")
             )
@@ -387,10 +414,22 @@ async def main():
                 == "sensor.renamed_189_free_total"
             )
             checks.append(
-                "weekly trend, alarm fit comparison, routing and Home Assistant map configuration"
+                "DHL weekday outlook, local trend fallback, alarm fit, routing and HA map"
             )
             axe_path = os.environ.get("AXE_CORE_PATH")
             if axe_path:
+                await page.evaluate("""() => {
+                    const hass = makeHass();
+                    hass.states["sensor.renamed_189_source_timestamp"].attributes.dhl_weekday_utilization = {mon:1,tue:2,sun:3};
+                    single.hass = hass;
+                    multi.hass = hass;
+                }""")
+                await (
+                    multi.get_by_role("region", name="Packstation 189", exact=True)
+                    .locator(".station-toggle")
+                    .click()
+                )
+                assert await multi.locator(".forecast").is_visible()
                 await page.add_script_tag(path=axe_path)
                 violations = await page.evaluate(
                     "async () => (await axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))"
