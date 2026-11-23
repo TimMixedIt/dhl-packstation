@@ -1,8 +1,12 @@
 import { escapeHTML as esc, language, status, SIZES, availableCount } from "./data.js";
 
+const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
 export const COPY = {
   de: {
     total: "Frei gesamt", week: "Wochentrend", weekInfo: "Eigene Messungen: typischer Tageswert aus bis zu 8 Wochen. Mindestens zwei beobachtete Tage je Wochentag.",
+    forecast: "DHL-Auslastung nach Wochentag", forecastInfo: "1 niedrig · 2 mittel · 3 hoch",
+    forecastLevels: ["Keine Angabe", "Niedrige Auslastung", "Mittlere Auslastung", "Hohe Auslastung"],
     missing: "Noch zu wenig Daten", few: "Wenige frei", many: "Viele frei", none: "Keine frei",
     alarm: "Paketalarm", map: "Standorte auf der Karte", select: "Stationen", notify: "Benachrichtigung",
     inbox: "HA-Glocke (ohne Push)", notifyHint: "Wähle ein Gerät für eine Push-Nachricht.", apple: "Apple Karten",
@@ -15,6 +19,8 @@ export const COPY = {
   },
   en: {
     total: "Total free", week: "Weekday trend", weekInfo: "Local observations: typical daily value over up to 8 weeks. At least two observed days per weekday.",
+    forecast: "DHL utilization by weekday", forecastInfo: "1 low · 2 medium · 3 high",
+    forecastLevels: ["No estimate", "Low utilization", "Medium utilization", "High utilization"],
     missing: "Not enough data yet", few: "Few free", many: "Many free", none: "None free",
     alarm: "Package alarm", map: "Station map", select: "Stations", notify: "Notification",
     inbox: "HA inbox (no push)", notifyHint: "Choose a device to receive a push notification.", apple: "Apple Maps",
@@ -27,22 +33,34 @@ export const COPY = {
   },
 };
 
-export function stationSummary(station, hass, showWeek) {
+export function stationSummary(station, hass, showLocalTrend) {
   const sensor = station.entities.free_total;
-  if (!sensor) return "";
   const labels = COPY[language(hass)];
-  const { week } = sensor.attributes;
-  const total = status(station) === "fresh" && /^\d+$/.test(sensor.state) ? sensor.state : "–";
+  const week = sensor?.attributes.week;
+  const forecast = station.entities.source_timestamp?.attributes.dhl_weekday_utilization;
+  const total = status(station) === "fresh" && /^\d+$/.test(sensor?.state) ? sensor.state : "–";
   const days = new Intl.DateTimeFormat(language(hass), { weekday: "short", timeZone: "UTC" });
-  const trend = Array.isArray(week) && week.length === 7 ? week.map((day, index) => {
-    const value = typeof day?.typical === "number" && Number.isFinite(day.typical) ? day.typical : null;
-    const category = value === null ? "missing" : value >= 6 ? "many" : value > 0 ? "few" : "none";
-    const number = value === null ? "–" : new Intl.NumberFormat(language(hass)).format(value);
-    const name = days.format(new Date(Date.UTC(2026, 0, 5 + index)));
-    return `<li class="${category}" aria-label="${esc(`${name}, ${labels[category]}, ${number}`)}"><span>${esc(name)}</span><span class="trend-value">${esc(number)}</span></li>`;
-  }).join("") : "";
-  return `<div class="station-summary"><span>${esc(labels.total)} <strong>${esc(total)}</strong></span>${directions(station, hass)}</div>
-    ${showWeek && trend ? `<section class="week"><h2>${esc(labels.week)}</h2><ul>${trend}</ul><p>${esc(labels.weekInfo)}</p></section>` : ""}`;
+  const dayLabel = index => days.format(new Date(Date.UTC(2026, 0, 5 + index)));
+  const levels = WEEKDAYS.map(day => forecast?.[day]);
+  let weekly = "";
+  if (levels.some(level => [1, 2, 3].includes(level))) {
+    const cells = levels.map((level, index) => {
+      const valid = [1, 2, 3].includes(level);
+      const name = dayLabel(index);
+      return `<li class="${valid ? `level-${level}` : "missing"}" aria-label="${esc(`${name}, ${labels.forecastLevels[valid ? level : 0]}`)}"><span>${esc(name)}</span><span class="trend-value">${valid ? level : "–"}</span></li>`;
+    }).join("");
+    weekly = `<section class="week forecast"><h2>${esc(labels.forecast)}</h2><ul>${cells}</ul><p>${esc(labels.forecastInfo)}</p></section>`;
+  } else if (showLocalTrend && Array.isArray(week) && week.length === WEEKDAYS.length) {
+    const cells = week.map((day, index) => {
+      const value = typeof day?.typical === "number" && Number.isFinite(day.typical) ? day.typical : null;
+      const category = value === null ? "missing" : value >= 6 ? "many" : value > 0 ? "few" : "none";
+      const number = value === null ? "–" : new Intl.NumberFormat(language(hass)).format(value);
+      const name = dayLabel(index);
+      return `<li class="${category}" aria-label="${esc(`${name}, ${labels[category]}, ${number}`)}"><span>${esc(name)}</span><span class="trend-value">${esc(number)}</span></li>`;
+    }).join("");
+    weekly = `<section class="week"><h2>${esc(labels.week)}</h2><ul>${cells}</ul><p>${esc(labels.weekInfo)}</p></section>`;
+  }
+  return `${sensor ? `<div class="station-summary"><span>${esc(labels.total)} <strong>${esc(total)}</strong></span>${directions(station, hass)}</div>` : ""}${weekly}`;
 }
 
 export function coordinates(station) {

@@ -45,6 +45,8 @@ def normalize_location(postal_code: str, station_number: str) -> tuple[str, str]
 
 
 LOCATION_TYPES = ("PACKSTATION", "DEIN_FACH")
+WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+UTILIZATION_FIELDS = {f"packstn_utilization_{day}": day for day in WEEKDAYS}
 
 
 def valid_primary_key(value: object) -> bool:
@@ -67,6 +69,24 @@ def _coordinates(position: object) -> tuple[float, float] | None:
     ):
         return lat, lon
     return None
+
+
+def _weekday_utilization(other_info: object) -> dict[str, int]:
+    """Read the three DHL utilization levels by weekday."""
+    utilization = {}
+    if not isinstance(other_info, list):
+        return utilization
+    for item in other_info:
+        if not isinstance(item, dict):
+            continue
+        field, level = item.get("type"), item.get("content")
+        if (
+            isinstance(field, str)
+            and field in UTILIZATION_FIELDS
+            and level in ("1", "2", "3")
+        ):
+            utilization[UTILIZATION_FIELDS[field]] = int(level)
+    return utilization
 
 
 @dataclass(frozen=True)
@@ -92,6 +112,7 @@ class PackstationData:
     compartments: dict[str, int | None]
     source_timestamp: datetime | None
     coordinates: tuple[float, float] | None = None
+    weekday_utilization: dict[str, int] | None = None
 
     @property
     def total(self) -> int | None:
@@ -284,4 +305,5 @@ class PackstationClient:
             compartments=counts,
             source_timestamp=timestamp,
             coordinates=_coordinates(data.get("geoPosition")),
+            weekday_utilization=_weekday_utilization(data.get("pfOtherinfos")),
         )

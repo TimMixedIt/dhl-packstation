@@ -32,7 +32,9 @@ Die Mehrstationskarte zeigt die freien Fächer je Größe in einer Zeile pro Sta
 
 Wähle für einen Alarm die Stationen aus und drücke **Suche starten**. **HA-Glocke (ohne Push)** legt die Meldung in der Home-Assistant-Glocke ab. Für eine Push-Nachricht wählst du ein Gerät mit eingerichteter Home-Assistant-App und erlaubten Benachrichtigungen. Der Alarm meldet sich einmal, sobald eine ausgewählte Station für alle eingegebenen Pakete gleichzeitig passende Fächer meldet. Steuerung und Einrichtung erfordern ein HA-Administratorkonto.
 
-Die Routenlinks öffnen **Apple Karten** oder **Google Maps**. **Standorte auf der Karte** zeigt die Standorte gemeinsam in Home Assistant. Der **Wochentrend** in der Einzelkarte beruht auf den eigenen Messungen der letzten acht Wochen. Für jeden Wochentag erscheinen Zahl und Farbe ab zwei beobachteten Tagen. Die Fachsensoren unterstützen außerdem die Langzeitstatistik des HA-Recorders.
+Die Routenlinks öffnen **Apple Karten** oder **Google Maps**. **Standorte auf der Karte** zeigt die Standorte gemeinsam in Home Assistant.
+
+**DHL-Auslastung nach Wochentag** erscheint in der Einzelkarte und den aufklappbaren Stationsdetails, wenn DHL Werte für den Standort liefert. Die Stufen beschreiben die erwartete Auslastung der gesamten Station. Fehlt die DHL-Angabe, zeigt die Einzelkarte den **Wochentrend** aus bis zu acht Wochen eigener Messungen. Dafür braucht jeder Wochentag mindestens zwei beobachtete Tage. Die Fachsensoren unterstützen außerdem die Langzeitstatistik des HA-Recorders.
 
 Die Abfrage erfolgt gemeinsam alle 15 Minuten. Unter den Optionen kannst du das maximale Alter der DHL-Daten festlegen. Standard sind 60 Minuten. Danach werden Fachzahlen nicht verfügbar, bis DHL wieder hinreichend aktuelle Daten liefert. Ein echter Nullwert bedeutet dagegen, dass DHL null freie Fächer dieser Größe gemeldet hat.
 

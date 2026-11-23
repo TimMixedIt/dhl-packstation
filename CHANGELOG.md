@@ -8,6 +8,7 @@
 - Add postal-code search for nearby lockers and show configured stations on the map.
 - Compare station capacity in a compact view and check package fit before starting an alarm.
 - Open directions in Apple Maps or Google Maps and clarify where alarm notifications appear.
+- Show DHL's weekday utilization when available, with the local weekday trend as a fallback.
 
 ## 0.3.0
 

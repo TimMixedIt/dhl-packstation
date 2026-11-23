@@ -78,6 +78,14 @@ class SourceTimestampSensor(PackstationEntity, SensorEntity):
         """Return the time of DHL's observation, not our HTTP request."""
         return self.coordinator.data.source_timestamp
 
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Expose weekday utilization even without a live observation."""
+        attrs = super().extra_state_attributes
+        if forecast := self.coordinator.data.weekday_utilization:
+            attrs["dhl_weekday_utilization"] = forecast
+        return attrs
+
 
 class TotalSensor(CompartmentSensor):
     """Expose the complete total, weekly trend, and station location."""

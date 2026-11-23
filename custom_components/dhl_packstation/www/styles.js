@@ -38,9 +38,9 @@ export const styles = `
   .week li { display:grid; text-align:center; font-size:12px; gap:3px; background:var(--secondary-background-color,#333); border-radius:6px; padding:5px 0; }
   .trend-value { font-weight:700; font-size:14px; }
   .week li::after { content:""; justify-self:center; width:7px; height:7px; border-radius:50%; background:var(--trend-color,var(--disabled-color,#777)); }
-  .week .many { --trend-color:var(--success-color,#6ca530); }
-  .week .few { --trend-color:var(--warning-color,#d09121); }
-  .week .none { --trend-color:var(--error-color,#db4448); }
+  .week .many,.week .level-1 { --trend-color:var(--success-color,#6ca530); }
+  .week .few,.week .level-2 { --trend-color:var(--warning-color,#d09121); }
+  .week .none,.week .level-3 { --trend-color:var(--error-color,#db4448); }
   .week p { color:var(--secondary-text-color); font-size:12px; margin:8px 0 0; }
   .overview { padding:0 20px 20px; }
   .directions { display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; }
