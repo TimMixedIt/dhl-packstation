@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0b1
 
 - Support DeinFach lockers listed by DHL, including live compartment counts when DHL provides them.
 
