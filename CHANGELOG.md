@@ -6,6 +6,8 @@
 - Start a persistent one-time package alarm for a mix of exact sizes from the overview card.
 - Show total free compartments, Home Assistant long-term statistics, and a measured weekday trend.
 - Add postal-code search for nearby lockers and show configured stations on the map.
+- Compare station capacity in a compact view and check package fit before starting an alarm.
+- Open directions in Apple Maps or Google Maps and clarify where alarm notifications appear.
 
 ## 0.3.0
 

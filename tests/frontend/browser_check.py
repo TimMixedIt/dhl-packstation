@@ -7,6 +7,7 @@ import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 from playwright.async_api import async_playwright
 
@@ -70,7 +71,7 @@ async def main():
                     )
                     for card in [single, multi]:
                         assert await card.evaluate(
-                            "element => [...element.shadowRoot.querySelectorAll('.grid,.tile,.metric')].every(el => el.scrollWidth <= el.clientWidth + 1)"
+                            "element => [...element.shadowRoot.querySelectorAll('.grid,.tile,.metric,.compare-row')].every(el => el.scrollWidth <= el.clientWidth + 1)"
                         )
                     checks.append(f"layout {theme} {width}px")
                 await page.set_viewport_size({"width": 768, "height": 1600})
@@ -296,10 +297,55 @@ async def main():
                 path=str(artifact_dir / "weekday-trend.png")
             )
 
+            station_row = multi.get_by_role(
+                "region", name="Packstation 189", exact=True
+            )
+            details = station_row.locator(".station-toggle")
+            assert await details.get_attribute("aria-expanded") == "false"
+            await details.click()
+            assert await details.get_attribute("aria-expanded") == "true"
+            for service, host in [
+                ("Apple Karten", "maps.apple.com"),
+                ("Google Maps", "www.google.com"),
+            ]:
+                route = urlparse(
+                    await station_row.get_by_role(
+                        "link", name=f"{service} · Packstation 189"
+                    ).get_attribute("href")
+                )
+                assert route.hostname == host
+                assert parse_qs(route.query)["destination"] == ["49.42,8.41"]
+            await details.click()
+
             tools = multi.locator("dhl-packstation-tools")
             await tools.locator(".alarm summary").click()
             await tools.locator('input[name="s"]').fill("1")
             await tools.locator('input[name="m"]').fill("2")
+            assert (
+                await multi.locator(".compare-result").inner_text()
+                == "1 von 3 Stationen passen"
+            )
+            assert await multi.locator(".compare-label").all_text_contents() == [
+                "Passt",
+                "Fehlt 1× S",
+                "Daten fehlen",
+            ]
+            assert await tools.locator(".station-fit").all_text_contents() == [
+                "Passt",
+                "Fehlt 1× S",
+                "Daten fehlen",
+            ]
+            assert await tools.locator('input[name="m"]').evaluate(
+                "el => el === el.getRootNode().activeElement"
+            )
+            assert (
+                await tools.locator('option[value="none"]').inner_text()
+                == "HA-Glocke (ohne Push)"
+            )
+            assert "Eigene Messungen" in await single.locator(".week").inner_text()
+            await multi.locator(".compare").screenshot(
+                path=str(artifact_dir / "comparison.png")
+            )
             await tools.locator('select[name="notifier"]').select_option(
                 "mobile_app_test_phone"
             )
@@ -333,11 +379,15 @@ async def main():
             await tools.locator(".map-content ha-card").wait_for()
             assert await page.evaluate("window.mapConfig.type") == "map"
             assert (
+                await page.evaluate("window.mapConfig.entities[0].label_mode")
+                == "state"
+            )
+            assert (
                 await page.evaluate("window.mapConfig.entities[0].entity")
                 == "sensor.renamed_189_free_total"
             )
             checks.append(
-                "weekly trend, alarm controls and Home Assistant map configuration"
+                "weekly trend, alarm fit comparison, routing and Home Assistant map configuration"
             )
             axe_path = os.environ.get("AXE_CORE_PATH")
             if axe_path:

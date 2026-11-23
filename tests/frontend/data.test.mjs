@@ -69,3 +69,27 @@ test("all data interpolated into HTML is escaped", () => {
   assert.ok(!html.includes("<script>"));
   assert.ok(!html.includes("<img"));
 });
+
+test("package fit uses exact sizes, real zero, and only fresh known counts", async () => {
+  const { packageFit } = await import("../../custom_components/dhl_packstation/www/station-view.js");
+  const station = fixture();
+  assert.equal(packageFit(station, {s: 0, m: 0}), null);
+  assert.deepEqual(packageFit(station, {s: 1, m: 2}), {state: "fits"});
+  station.entities.free_m.state = "0";
+  assert.deepEqual(packageFit(station, {s: 1, m: 2}), {state: "shortage", shortages: ["2× M"]});
+  station.entities.free_m.state = "unavailable";
+  assert.deepEqual(packageFit(station, {s: 1, m: 2}), {state: "noData"});
+  station.entities.stale_data.state = "on";
+  assert.deepEqual(packageFit(station, {s: 1}), {state: "noData"});
+});
+
+test("route links encode only verified station coordinates", async () => {
+  const { directions } = await import("../../custom_components/dhl_packstation/www/station-view.js");
+  const station = fixture();
+  station.entities.free_total = {attributes: {latitude: 49.42, longitude: 8.41}};
+  const links = directions(station, hass);
+  assert.match(links, /https:\/\/maps\.apple\.com\/directions\?destination=49\.42%2C8\.41/);
+  assert.match(links, /https:\/\/www\.google\.com\/maps\/dir\/\?api=1&amp;destination=49\.42%2C8\.41/);
+  station.entities.free_total.attributes.latitude = 91;
+  assert.equal(directions(station, hass), "");
+});
