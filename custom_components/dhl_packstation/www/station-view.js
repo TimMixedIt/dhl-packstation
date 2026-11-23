@@ -36,8 +36,8 @@ export const COPY = {
 export function stationSummary(station, hass, showLocalTrend) {
   const sensor = station.entities.free_total;
   const labels = COPY[language(hass)];
-  const week = sensor?.attributes.week;
-  const forecast = station.entities.source_timestamp?.attributes.dhl_weekday_utilization;
+  const week = sensor?.attributes?.week;
+  const forecast = station.entities.source_timestamp?.attributes?.dhl_weekday_utilization;
   const total = status(station) === "fresh" && /^\d+$/.test(sensor?.state) ? sensor.state : "–";
   const days = new Intl.DateTimeFormat(language(hass), { weekday: "short", timeZone: "UTC" });
   const dayLabel = index => days.format(new Date(Date.UTC(2026, 0, 5 + index)));
