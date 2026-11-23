@@ -51,6 +51,7 @@ class PackstationData:
     primary_key: str
     postal_code: str
     station_number: str
+    location_type: str
     city: str
     address: str
     name: str
@@ -132,16 +133,18 @@ class PackstationClient:
     @staticmethod
     def _check_location(
         data: dict[str, Any], postal_code: str, station_number: str
-    ) -> None:
+    ) -> str:
         """Never silently accept a nearby or different kind of location."""
+        location_type = data.get("locationType")
         if (
-            data.get("locationType") != "PACKSTATION"
+            location_type not in ("PACKSTATION", "DEIN_FACH")
             or data.get("zipCode") != postal_code
             or data.get("primaryKeyZipRegion") != station_number
         ):
             raise StationNotFound(
                 "The returned location is not the requested Packstation"
             )
+        return location_type
 
     async def async_get_station(
         self, primary_key: str, postal_code: str, station_number: str
@@ -150,7 +153,7 @@ class PackstationClient:
         if not re.fullmatch(r"[0-9]{1,2}-[0-9]{6,9}", primary_key):
             raise InvalidResponse("Invalid location identifier")
         data = await self._get(f"locationByPrimaryKeyPF/{primary_key}")
-        self._check_location(data, postal_code, station_number)
+        location_type = self._check_location(data, postal_code, station_number)
         if data.get("primaryKeyPF") != primary_key:
             raise InvalidResponse("Location identifier changed")
         live = data.get("liveStatus")
@@ -176,6 +179,7 @@ class PackstationClient:
             primary_key=primary_key,
             postal_code=postal_code,
             station_number=station_number,
+            location_type=location_type,
             city=data.get("city") if isinstance(data.get("city"), str) else "",
             address=" ".join(
                 value

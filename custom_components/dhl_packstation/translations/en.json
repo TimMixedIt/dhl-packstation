@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Add a Packstation",
-        "description": "Enter the postal code of the station and its Packstation number. No DHL account is required. Free compartment data may not be available at every station.",
+        "description": "Enter the postal code and number of your DHL Packstation or DeinFach locker listed in the DHL location finder. No DHL account is required. Free compartment data may not be available at every station.",
         "data": {
           "postal_code": "Postal code",
           "station_number": "Packstation number"

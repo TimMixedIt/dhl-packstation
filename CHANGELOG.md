@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Support DeinFach lockers listed by DHL, including live compartment counts when DHL provides them.
+
 ## 0.3.0
 
 - Set a custom station order in the overview card using the existing `stations` list or the up and down buttons in the visual editor.

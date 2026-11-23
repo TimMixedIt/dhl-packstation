@@ -14,6 +14,7 @@ from custom_components.dhl_packstation.api import (
     StationNotFound,
     normalize_location,
 )
+from custom_components.dhl_packstation.const import API_BASE
 
 from .conftest import DETAIL_URL, LOOKUP_URL
 
@@ -86,6 +87,34 @@ async def test_bad_lookup(client, aioclient_mock, response, error):
     aioclient_mock.get(LOOKUP_URL, json=response)
     with pytest.raises(error):
         await client.async_resolve("67141", "189")
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"zipCode": "27778"},
+        {"primaryKeyZipRegion": "607"},
+        {"locationType": "POSTFILIALE"},
+        {"locationType": []},
+    ],
+)
+async def test_wrong_deinfach_detail_rejected(client, aioclient_mock, station, changes):
+    station.update(
+        primaryKeyPF="13-27777606",
+        zipCode="27777",
+        primaryKeyZipRegion="606",
+        locationType="DEIN_FACH",
+    )
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=27777:606&maxResults=1",
+        json={"pfLocations": [station]},
+    )
+    aioclient_mock.get(
+        f"{API_BASE}/locationByPrimaryKeyPF/13-27777606", json={**station, **changes}
+    )
+    with pytest.raises(StationNotFound):
+        await client.async_resolve("27777", "606")
+    assert aioclient_mock.call_count == 2
 
 
 @pytest.mark.parametrize("primary_key", ["../bad", 123, None])

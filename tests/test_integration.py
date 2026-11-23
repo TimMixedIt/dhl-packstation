@@ -1,10 +1,13 @@
 """Test setup, entities, expiry, polling, errors, and unloading together."""
 
+import json
 from copy import deepcopy
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
@@ -44,6 +47,52 @@ async def test_setup_entities(hass, entry, mock_dhl):
     )
     assert device is not None
     assert device.manufacturer == "DHL"
+
+
+async def test_deinfach_setup_and_refresh(hass, aioclient_mock):
+    """Resolve the reported station and poll the returned DHL identifier."""
+    station = json.loads((Path(__file__).parent / "fixtures/deinfach.json").read_text())
+    station_id = station["primaryKeyPF"]
+    url = f"{API_BASE}/locationByPrimaryKeyPF/{station_id}"
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=27777:606&maxResults=1",
+        json={"pfLocations": [station]},
+    )
+    aioclient_mock.get(url, json=station)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={"postal_code": "27777", "station_number": "606"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    entry = result["result"]
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == station_id
+    assert entry.data["primary_key"] == station_id
+    assert aioclient_mock.call_count == 3
+    device = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, station_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.manufacturer == "DeinFach"
+    assert device.configuration_url.endswith("?address=27777%3A606")
+    for size, count in {"s": "3", "m": "0", "l": "0", "xl": "0"}.items():
+        assert (
+            hass.states.get(entity_id(hass, f"free_{size}", station_id)).state == count
+        )
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, json={**station, "liveStatus": None})
+    await entry.runtime_data.async_refresh()
+    assert aioclient_mock.call_count == 1
+    assert hass.states.get(entity_id(hass, "free_s", station_id)).state == "unavailable"
+    assert (
+        hass.states.get(
+            entity_id(hass, "stale_data", station_id, "binary_sensor")
+        ).state
+        == "on"
+    )
 
 
 async def test_german_names_and_unit_translation(hass, entry, mock_dhl):

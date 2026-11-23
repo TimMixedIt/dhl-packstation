@@ -15,6 +15,8 @@ In **HACS** nach **DHL Packstation** suchen und die Integration herunterladen. A
 5. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach **DHL Packstation** suchen.
 6. Die Postleitzahl des Stationsstandorts und die Packstationsnummer eingeben.
 
+Im DHL-Standortfinder gelistete DeinFach-Automaten richtest du ebenfalls mit Standort-PLZ und Stationsnummer ein. Freie Fächer werden angezeigt, soweit DHL aktuelle Zahlen meldet.
+
 Die Integration erzeugt ein Gerät pro Station mit vier Fachzahlsensoren für S/M/L/XL sowie zwei Diagnosewerten: DHL-Datenstand und „DHL-Daten veraltet oder fehlend“. Weitere Stationen werden durch erneutes Hinzufügen der Integration eingerichtet.
 
 ## Die mitgelieferten Karten

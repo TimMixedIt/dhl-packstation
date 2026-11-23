@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Packstation hinzufügen",
-        "description": "Gib die Postleitzahl des Standorts und die Packstationsnummer ein. Ein DHL-Konto ist nicht erforderlich. Nicht jede Station liefert freie Fachzahlen.",
+        "description": "Gib die Postleitzahl und Nummer deiner DHL-Packstation oder deines im DHL-Standortfinder gelisteten DeinFach-Automaten ein. Ein DHL-Konto ist nicht erforderlich. Nicht jede Station liefert freie Fachzahlen.",
         "data": {
           "postal_code": "Postleitzahl",
           "station_number": "Packstationsnummer"

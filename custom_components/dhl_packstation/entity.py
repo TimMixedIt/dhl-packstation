@@ -17,17 +17,18 @@ class PackstationEntity(CoordinatorEntity[PackstationCoordinator]):
         super().__init__(coordinator)
         self._key = key
         station = coordinator.data
+        is_deinfach = station.location_type == "DEIN_FACH"
         self._attr_unique_id = f"{station.primary_key}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, station.primary_key)},
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer="DHL",
-            model="Packstation",
+            manufacturer="DeinFach" if is_deinfach else "DHL",
+            model="Paketautomat" if is_deinfach else "Packstation",
             name=f"Packstation {station.station_number} · {station.postal_code}",
             configuration_url=(
                 "https://www.dhl.de/de/privatkunden/dhl-standorte-finden.html"
                 f"?address={station.postal_code}%3A{station.station_number}"
-                "&locationType=packstationen"
+                + ("" if is_deinfach else "&locationType=packstationen")
             ),
         )
 

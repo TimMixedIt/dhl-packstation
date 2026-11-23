@@ -1,0 +1,17 @@
+{
+  "primaryKeyPF": "13-27777606",
+  "primaryKeyZipRegion": "606",
+  "zipCode": "27777",
+  "city": "Ganderkesee",
+  "street": "Bargup",
+  "houseNo": "1",
+  "locationType": "DEIN_FACH",
+  "locationName": "DeinFach Automat",
+  "liveStatus": {
+    "freeCompartmentsS": 3,
+    "freeCompartmentsM": 0,
+    "freeCompartmentsL": 0,
+    "freeCompartmentsXl": 0,
+    "sourceTimestamp": "2026-11-13T00:58:00+0100"
+  }
+}

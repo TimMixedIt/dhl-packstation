@@ -1,6 +1,6 @@
 # DHL Packstation
 
-Home Assistant integration for the free S, M, L, and XL compartments of German DHL Packstations. Set up each station from the Home Assistant interface using its postal code and Packstation number. No DHL account or developer key is required.
+Home Assistant integration for free S, M, L, and XL compartments at DHL Packstations and DeinFach lockers listed by DHL in Germany. Set up either type from the Home Assistant interface using the station's postal code and number. No DHL account or developer key is required.
 
 This is an independent community project, not an official DHL product. See the verification section for test coverage and remaining field checks.
 
@@ -24,7 +24,7 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 
 - Home Assistant **2026.10.4 or newer** (Python 3.14.2 or newer when running Core yourself).
 - Internet access from Home Assistant to `www.dhl.de` over HTTPS.
-- A Packstation whose availability DHL exposes. A valid station can still have no live data.
+- A DHL Packstation or DeinFach locker listed in the DHL location finder. Live counts depend on what DHL reports for that station.
 
 ## Installation
 
