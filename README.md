@@ -8,17 +8,18 @@ This is an independent community project, not an official DHL product. See the v
 
 ## What it provides
 
-Each station becomes one device with six entities:
+Each station becomes one device with seven entities:
 
 | Entity | Purpose |
 | --- | --- |
 | Free S / M / L / XL compartments | The exact nonnegative count returned by DHL, including zero |
+| Total free compartments | The sum when all four counts are available, plus the weekday trend and location |
 | DHL data timestamp | The time of DHL's observation, converted to an aware timestamp |
 | DHL data stale or missing | A diagnostic problem indicator for missing, old, or implausibly future-dated timestamps |
 
 One shared request per station runs every 15 minutes. Counts expire after 60 minutes by default, without waiting for the next HTTP request. Change the accepted age (30–1440 minutes) in the integration's options. This is a local freshness policy, not a DHL guarantee.
 
-Missing or invalid counts become unavailable individually. Missing, invalid, or old timestamps make all four counts unavailable. A network error makes every entity unavailable until a successful update. The timestamp remains visible when a successful response contains old data. Up to five minutes of forward clock skew is tolerated. On HTTP 429 the integration waits at least 15 minutes and honors a longer `Retry-After`, in either seconds or HTTP-date form.
+Missing or invalid counts become unavailable individually. Missing, invalid, or old timestamps make the compartment counts unavailable. A network error makes every entity unavailable until a successful update. The timestamp remains visible when a successful response contains old data. Up to five minutes of forward clock skew is tolerated. On HTTP 429 the integration waits at least 15 minutes and honors a longer `Retry-After`, in either seconds or HTTP-date form.
 
 ## Requirements
 
@@ -37,7 +38,7 @@ Search for **DHL Packstation** in **HACS**, or under **Settings → Marketplace*
 1. Extract the installation ZIP. Copy its `custom_components/dhl_packstation` folder to `<HA config>/custom_components/dhl_packstation`. The final path must contain `manifest.json` directly inside `dhl_packstation`.
 2. Restart Home Assistant after this manual installation.
 3. Go to **Settings → Devices & services → Add integration → DHL Packstation**.
-4. Enter the postal code **of the station**, and its Packstation number. Repeat for additional stations.
+4. Enter the postal code **of the station** and its number, or leave the number blank to choose from nearby DHL and DeinFach lockers. Repeat for additional stations.
 5. Open the device to see its entities. Diagnostics may appear in a separate section.
 
 No YAML configuration is used. If you tried the earlier REST example, remove that example yourself after verifying the new integration; its entities are separate and are not migrated or deleted automatically.
@@ -79,6 +80,16 @@ stations:
 
 Station identifiers can be read from the entities' `dhl_packstation_id` attribute; they are also selected directly by name in the editor.
 
+## Package alarm, map and weekly trend
+
+Open **Package alarm** on the multi-station card as a Home Assistant administrator. Enter the number of packages per size (for example **1× S, 2× M**), select the stations to watch, and choose the Home Assistant notification inbox or a phone registered with the Companion app. Start the search. A notification is sent once when **one** selected station reports enough fresh compartments of the requested sizes. A fitting station can trigger immediately on start. The request survives a Home Assistant restart. Use **Stop search** to cancel, or **New search** to clear a completed request. The same controls are available as the `dhl_packstation.start_alarm` and `dhl_packstation.stop_alarm` automation actions.
+
+The overview's **Open map** section places configured stations with coordinates on Home Assistant's Map card and offers a direct OpenStreetMap link. Use the integration's setup wizard to find and add nearby stations by postal code.
+
+The single-station card shows a **weekday trend** based on fresh observations collected by this integration. It retains the first complete sample per local hour over eight weeks. Each weekday shows the median of its observed daily medians, with at least two observed dates required. The colors indicate zero, fewer than six, or six or more typical free compartments. A dash indicates insufficient history and is expected on a new install. The figures describe past observations.
+
+The four size sensors and the total sensor also support Home Assistant long-term statistics through Recorder. The total is unavailable when any size is missing or stale.
+
 ## Remove or update
 
 Remove a station from Devices & services. Its HTTP polling and expiry callback stop when it unloads. Other configured stations continue working.
@@ -95,11 +106,11 @@ For a manual update, back up the current component folder, replace it with the n
 - A blocked or unavailable DHL service is not bypassed. Wait before trying setup again if requests are limited.
 - The integration does not calculate occupancy percentages: no verified per-size total capacity is available.
 
-Home Assistant generates entity IDs from names and language. Use the actual entity IDs shown by your installation in automations, and check availability before numeric comparisons. There are no custom actions, triggers, webhooks, or reservations.
+Home Assistant generates entity IDs from names and language. Use the actual entity IDs shown by your installation in automations, and check availability before numeric comparisons. The package alarm actions can also be used in automations.
 
 ## Privacy
 
-During setup, the station's postal code and number are sent to DHL to find its public location identifier. Subsequent requests send that identifier. DHL also sees the requesting IP address. Identifiers are saved in Home Assistant's config entry. No DHL credentials, parcel numbers, personal Postnummer, analytics, or external proxy service are used.
+During setup, the postal code and any entered station number are sent to DHL to find public location identifiers. Subsequent requests send that identifier. DHL also sees the requesting IP address. Identifiers are saved in Home Assistant's config entry. The weekly observations and alarm are stored on your Home Assistant instance. Opening the map can load external map tiles, and selecting a phone uses the Companion app’s notification delivery. No DHL credentials, parcel numbers, personal Postnummer, analytics, or external proxy service are used.
 
 ## Development and verification
 

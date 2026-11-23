@@ -23,10 +23,25 @@
       ["1-35460101","101","35460","Staufenberg","Marktstr. 5","REWE Markt",[null,null,null,null],"on"],
     ]) {
       const metadata={dhl_packstation_id:id,station_number:number,postal_code:postal,city,address,location_name:location};
-      for (const [key,value] of [...["s","m","l","xl"].map((size,index)=>[`free_${size}`,counts[index]===null?"unavailable":String(counts[index])]),["source_timestamp","2026-11-12T23:28:03+00:00"],["stale_data",stale]]) {
+      for (const [key,value] of [...["s","m","l","xl"].map((size,index)=>[`free_${size}`,counts[index]===null?"unavailable":String(counts[index])]),["free_total",counts.reduce((sum,n)=>sum+(n??0),0).toString()],["source_timestamp","2026-11-12T23:28:03+00:00"],["stale_data",stale]]) {
         hass.states[`sensor.renamed_${number}_${key}`]={state:value,attributes:{...metadata,dhl_packstation_key:key}};
       }
     }
+    const total = hass.states["sensor.renamed_189_free_total"];
+    Object.assign(total.attributes, {
+      latitude: 49.42, longitude: 8.41,
+      week: [2, 12, 0, null, 7.5, 1, null].map(typical => ({typical, days: typical === null ? 1 : 4})),
+    });
+    hass.services = {notify: {mobile_app_test_phone: {}}};
+    hass.callService = async (domain, action, data) => {window.lastCall = {domain, action, data};};
+    window.loadCardHelpers = async () => ({
+      createCardElement: (config) => {
+        window.mapConfig = config;
+        const card = document.createElement("ha-card");
+        card.textContent = "Map card fixture";
+        return card;
+      },
+    });
     return hass;
   };
   window.mount = async () => {

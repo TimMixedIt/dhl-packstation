@@ -30,8 +30,12 @@ async def setup(hass, entry):
 
 async def test_setup_entities(hass, entry, mock_dhl):
     await setup(hass, entry)
-    assert len(er.async_get(hass).entities) == 6
+    assert len(er.async_get(hass).entities) == 7
     assert mock_dhl.call_count == 1
+    total = hass.states.get(entity_id(hass, "free_total"))
+    assert total.state == "28"
+    assert total.attributes["state_class"] == "measurement"
+    assert len(total.attributes["week"]) == 7
     for size, count in {"s": 9, "m": 10, "l": 8, "xl": 1}.items():
         assert hass.states.get(entity_id(hass, f"free_{size}")).state == str(count)
     assert (
@@ -189,6 +193,7 @@ async def test_one_invalid_size_leaves_other_sizes(
     await setup(hass, entry)
     assert hass.states.get(entity_id(hass, "free_s")).state == "unavailable"
     assert hass.states.get(entity_id(hass, "free_m")).state == "10"
+    assert hass.states.get(entity_id(hass, "free_total")).state == "unavailable"
 
 
 async def test_setup_failure_retries(hass, entry, aioclient_mock):
@@ -248,6 +253,6 @@ async def test_multiple_stations_are_independent(hass, entry, mock_dhl, station)
     )
     other_entry.add_to_hass(hass)
     await setup(hass, other_entry)
-    assert len(er.async_get(hass).entities) == 12
+    assert len(er.async_get(hass).entities) == 14
     assert hass.states.get(entity_id(hass, "free_s")).state == "9"
     assert hass.states.get(entity_id(hass, "free_s", station="1-33104182")).state == "0"

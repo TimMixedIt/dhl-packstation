@@ -1,3 +1,4 @@
+import { stationSummary } from "./station-view.js";
 import { SIZES, availableCount, countLabel, escapeHTML as esc, status, text, timestamp } from "./data.js";
 
 const icon = (body, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
@@ -32,7 +33,7 @@ export function singleView(station, config, hass) {
     ${state === "fresh" ? "" : `<p class="warning" role="status">${esc(labels[state])}</p>`}
     <div class="sizes-header"><h2>${esc(labels.sizes)}</h2><button class="info" data-action="info" aria-label="${esc(labels.info)}">${info}</button></div>
     <div class="grid">${SIZES.map((size) => compartment(station, size, config, labels, false)).join("")}</div>
-    ${updated(station, hass)}<p class="note">${esc(labels.disclaimer)}</p>
+    ${updated(station, hass)}${stationSummary(station, hass, true)}<p class="note">${esc(labels.disclaimer)}</p>
   </div>`;
 }
 
@@ -44,7 +45,7 @@ export function overviewView(stations, config, hass) {
       <div class="station-heading"><h2>${esc(`${labels.station} ${meta.station_number} · ${meta.city || meta.postal_code}`)}</h2><span class="badge ${state}">${esc(labels[state])}</span></div>
       <p class="address">${esc([meta.location_name, meta.address].filter(Boolean).join(" · "))}</p>
       <div class="grid">${SIZES.map((size) => compartment(station, size, config, labels, true)).join("")}</div>
-      ${updated(station, hass)}
+      ${updated(station, hass)}${stationSummary(station, hass, false)}
     </section>`;
   }).join("")}<p class="note">${esc(labels.disclaimer)}</p></div>`;
 }

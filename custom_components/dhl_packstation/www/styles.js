@@ -30,6 +30,18 @@ export const styles = `
   .note { color:var(--secondary-text-color,#aaa); font-size:14px; line-height:1.5; margin:24px 0 0; }
   .warning { color:var(--warning-color,#e3b341); font-size:14px; margin:0 0 16px; line-height:1.5; }
   .empty-message { margin:0; padding:16px; font-size:15px; line-height:1.5; color:var(--secondary-text-color,#aaa); }
+  .station-summary { display:flex; justify-content:space-between; gap:8px; margin-top:12px; font-size:14px; }
+  .station-summary a { color:var(--primary-color); }
+  .week { border:1px solid var(--divider-color,#777); border-radius:12px; margin-top:16px; padding:12px; }
+  .week h2 { font-size:16px; margin:0 0 8px; }
+  .week ul { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+  .week li { display:grid; text-align:center; font-size:12px; gap:3px; background:var(--secondary-background-color,#333); border-radius:6px; padding:5px 0; }
+  .trend-value { font-weight:700; font-size:14px; }
+  .week li::after { content:""; justify-self:center; width:7px; height:7px; border-radius:50%; background:var(--trend-color,var(--disabled-color,#777)); }
+  .week .many { --trend-color:var(--success-color,#6ca530); }
+  .week .few { --trend-color:var(--warning-color,#d09121); }
+  .week .none { --trend-color:var(--error-color,#db4448); }
+  .week p { color:var(--secondary-text-color); font-size:12px; margin:8px 0 0; }
   .overview { padding:0 20px 20px; }
   .station { padding:20px 0; border-top:1px solid var(--divider-color,#444); }
   .station:last-of-type { padding-bottom:0; }

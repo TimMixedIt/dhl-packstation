@@ -287,6 +287,58 @@ async def main():
             assert await editor.locator("fieldset").evaluate(
                 "el => el.scrollWidth <= el.clientWidth + 1"
             )
+            await page.evaluate("single.hass=makeHass(); multi.hass=makeHass()")
+            assert await single.locator(".week li").count() == 7
+            assert await single.locator(".week li.missing").count() == 2
+            assert await single.locator(".week li.none").count() == 1
+            assert await single.locator(".station-summary strong").inner_text() == "29"
+            await single.locator(".week").screenshot(
+                path=str(artifact_dir / "weekday-trend.png")
+            )
+
+            tools = multi.locator("dhl-packstation-tools")
+            await tools.locator(".alarm summary").click()
+            await tools.locator('input[name="s"]').fill("1")
+            await tools.locator('input[name="m"]').fill("2")
+            await tools.locator('select[name="notifier"]').select_option(
+                "mobile_app_test_phone"
+            )
+            await tools.locator(".alarm").screenshot(
+                path=str(artifact_dir / "package-alarm.png")
+            )
+            await tools.get_by_role("button", name="Suche starten").click()
+            call = await page.evaluate("window.lastCall")
+            assert call == {
+                "domain": "dhl_packstation",
+                "action": "start_alarm",
+                "data": {
+                    "s": 1,
+                    "m": 2,
+                    "l": 0,
+                    "xl": 0,
+                    "stations": ["1-67141189", "1-33104182", "1-35460101"],
+                    "notifier": "mobile_app_test_phone",
+                },
+            }, call
+            await page.evaluate("""() => {
+                const hass = makeHass();
+                hass.states["sensor.renamed_189_free_total"].attributes.alarm = {
+                    status: "waiting", sizes: {s:1,m:2}, stations: ["1-67141189"]
+                };
+                multi.hass = hass;
+            }""")
+            await tools.get_by_role("button", name="Suche stoppen").click()
+            assert await page.evaluate("window.lastCall.action") == "stop_alarm"
+            await tools.locator(".map summary").click()
+            await tools.locator(".map-content ha-card").wait_for()
+            assert await page.evaluate("window.mapConfig.type") == "map"
+            assert (
+                await page.evaluate("window.mapConfig.entities[0].entity")
+                == "sensor.renamed_189_free_total"
+            )
+            checks.append(
+                "weekly trend, alarm controls and Home Assistant map configuration"
+            )
             axe_path = os.environ.get("AXE_CORE_PATH")
             if axe_path:
                 await page.add_script_tag(path=axe_path)

@@ -44,6 +44,40 @@ def normalize_location(postal_code: str, station_number: str) -> tuple[str, str]
     return postal_code, str(int(station_number))
 
 
+LOCATION_TYPES = ("PACKSTATION", "DEIN_FACH")
+
+
+def valid_primary_key(value: object) -> bool:
+    """Accept only DHL identifier format before constructing a URL."""
+    return (
+        isinstance(value, str)
+        and re.fullmatch(r"[0-9]{1,2}-[0-9]{6,9}", value) is not None
+    )
+
+
+def _coordinates(position: object) -> tuple[float, float] | None:
+    if not isinstance(position, dict):
+        return None
+    lat, lon = position.get("latitude"), position.get("longitude")
+    if (
+        type(lat) in (int, float)
+        and type(lon) in (int, float)
+        and -90 <= lat <= 90
+        and -180 <= lon <= 180
+    ):
+        return lat, lon
+    return None
+
+
+@dataclass(frozen=True)
+class NearbyStation:
+    """Verified identifiers and label for a search result."""
+
+    postal_code: str
+    station_number: str
+    label: str
+
+
 @dataclass(frozen=True)
 class PackstationData:
     """One station and its reported availability."""
@@ -57,6 +91,13 @@ class PackstationData:
     name: str
     compartments: dict[str, int | None]
     source_timestamp: datetime | None
+    coordinates: tuple[float, float] | None = None
+
+    @property
+    def total(self) -> int | None:
+        """Only sum a complete observation without substituting zero."""
+        values = [value for value in self.compartments.values() if value is not None]
+        return sum(values) if len(values) == len(COMPARTMENTS) else None
 
     def is_fresh(self, now: datetime, max_age: timedelta) -> bool:
         """Reject missing, old, and implausibly future-dated observations."""
@@ -106,6 +147,59 @@ class PackstationClient:
             raise InvalidResponse("DHL did not return an object")
         return data
 
+    async def async_nearby(self, postal_code: str) -> dict[str, NearbyStation]:
+        """Find up to 20 nearby DHL and DeinFach lockers by postal code."""
+        postal_code, _ = normalize_location(postal_code, "1")
+        result = await self._get(
+            "nearbySearch",
+            address=postal_code,
+            maxResults=20,
+            locationType="PACKSTATION,DEIN_FACH",
+        )
+        locations = result.get("pfLocations")
+        if not isinstance(locations, list):
+            raise InvalidResponse("Missing locations list")
+        stations = {}
+        for location in locations[:20]:
+            if (
+                not isinstance(location, dict)
+                or location.get("locationType") not in LOCATION_TYPES
+            ):
+                continue
+            key = location.get("primaryKeyPF")
+            if not valid_primary_key(key):
+                continue
+            postal, number = (
+                location.get("zipCode"),
+                location.get("primaryKeyZipRegion"),
+            )
+            if not isinstance(postal, str) or not isinstance(number, str):
+                continue
+            try:
+                if normalize_location(postal, number) != (postal, number):
+                    continue
+            except ValueError:
+                continue
+            name = (
+                "DeinFach" if location["locationType"] == "DEIN_FACH" else "Packstation"
+            )
+            address = " ".join(
+                value
+                for field in ("street", "houseNo", "zipCode", "city")
+                if isinstance(value := location.get(field), str) and value
+            )
+            position = location.get("geoPosition")
+            distance = position.get("distance") if isinstance(position, dict) else None
+            suffix = (
+                f" · {distance / 1000:.1f} km"
+                if type(distance) in (int, float) and 0 <= distance <= 1_000_000
+                else ""
+            )
+            stations[key] = NearbyStation(
+                postal, number, f"{name} {number} · {address}{suffix}"
+            )
+        return stations
+
     async def async_resolve(
         self, postal_code: str, station_number: str
     ) -> PackstationData:
@@ -124,9 +218,7 @@ class PackstationClient:
             raise InvalidResponse("Invalid location")
         self._check_location(location, postal_code, station_number)
         primary_key = location.get("primaryKeyPF")
-        if not isinstance(primary_key, str) or not re.fullmatch(
-            r"[0-9]{1,2}-[0-9]{6,9}", primary_key
-        ):
+        if not valid_primary_key(primary_key):
             raise InvalidResponse("Invalid location identifier")
         return await self.async_get_station(primary_key, postal_code, station_number)
 
@@ -137,7 +229,7 @@ class PackstationClient:
         """Never silently accept a nearby or different kind of location."""
         location_type = data.get("locationType")
         if (
-            location_type not in ("PACKSTATION", "DEIN_FACH")
+            location_type not in LOCATION_TYPES
             or data.get("zipCode") != postal_code
             or data.get("primaryKeyZipRegion") != station_number
         ):
@@ -150,7 +242,7 @@ class PackstationClient:
         self, primary_key: str, postal_code: str, station_number: str
     ) -> PackstationData:
         """Read and validate one detail response."""
-        if not re.fullmatch(r"[0-9]{1,2}-[0-9]{6,9}", primary_key):
+        if not valid_primary_key(primary_key):
             raise InvalidResponse("Invalid location identifier")
         data = await self._get(f"locationByPrimaryKeyPF/{primary_key}")
         location_type = self._check_location(data, postal_code, station_number)
@@ -191,4 +283,5 @@ class PackstationClient:
             else "",
             compartments=counts,
             source_timestamp=timestamp,
+            coordinates=_coordinates(data.get("geoPosition")),
         )

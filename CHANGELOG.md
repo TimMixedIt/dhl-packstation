@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Support DeinFach lockers listed by DHL, including live compartment counts when DHL provides them.
+- Start a persistent one-time package alarm for a mix of exact sizes from the overview card.
+- Show total free compartments, Home Assistant long-term statistics, and a measured weekday trend.
+- Add postal-code search for nearby lockers and show configured stations on the map.
 
 ## 0.3.0
 

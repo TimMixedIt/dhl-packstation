@@ -6,8 +6,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from .activity import PackstationActivity
 from .api import PackstationClient
-from .const import DOMAIN
+from .const import CONF_PRIMARY_KEY, DOMAIN
 from .coordinator import PackstationConfigEntry, PackstationCoordinator
 from .frontend import async_setup_cards
 
@@ -17,6 +18,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load bundled cards when the Home Assistant frontend is enabled."""
+    activity = hass.data[DOMAIN] = PackstationActivity(hass)
+    await activity.async_setup()
     if "frontend" in hass.config.components:
         await async_setup_cards(hass)
     return True
@@ -47,3 +50,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload all station entities."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: PackstationConfigEntry
+) -> None:
+    """Discard the local history of a removed station."""
+    await hass.data[DOMAIN].async_remove_station(entry.data[CONF_PRIMARY_KEY])

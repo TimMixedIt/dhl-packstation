@@ -2,6 +2,7 @@ import { escapeHTML as esc, selectedStations, stations, text, validateConfig } f
 import { styles } from "./styles.js";
 import { chevron, helpDialog, locker, overviewView, singleView } from "./view.js";
 import "./editor.js";
+import "./tools.js";
 
 class PackstationCard extends HTMLElement {
   constructor() {
@@ -51,13 +52,22 @@ class PackstationCard extends HTMLElement {
     }
     const title = this._config.title || (this.overview ? labels.overview : labels.free);
     const html = `<style>${styles}</style><ha-card><details open><summary>${locker}<span>${esc(title)}</span>${chevron}</summary>${body}</details>${helpDialog(this._hass)}</ha-card>`;
-    if (html === this._html) return;
+    if (html === this._html) {
+      this._tools?.update(this._hass, this._items, all);
+      return;
+    }
     const dialogOpen = this.shadowRoot.querySelector("dialog")?.open;
     const summaryFocused = this.shadowRoot.activeElement?.tagName === "SUMMARY";
     const focused = this.shadowRoot.activeElement?.dataset;
     this._html = html;
     this.shadowRoot.innerHTML = html;
-    this.shadowRoot.querySelector("details").open = this._expanded;
+    const details = this.shadowRoot.querySelector("details");
+    details.open = this._expanded;
+    if (this.overview && this._hass && this._items.length) {
+      this._tools ||= document.createElement("dhl-packstation-tools");
+      this.shadowRoot.querySelector(".overview").append(this._tools);
+      this._tools.update(this._hass, this._items, all);
+    }
     if (dialogOpen) this.shadowRoot.querySelector("dialog").showModal();
     else if (summaryFocused) this.shadowRoot.querySelector("summary").focus({ preventScroll: true });
     else if (focused?.action) {

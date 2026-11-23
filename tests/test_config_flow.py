@@ -91,3 +91,98 @@ async def test_options(hass, entry):
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {"max_age_minutes": 120}
+
+
+async def test_nearby_setup(hass, aioclient_mock, station):
+    """Choose a station outside the search postal code and verify its own address."""
+    from custom_components.dhl_packstation.const import API_BASE
+
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=67142&maxResults=20&locationType=PACKSTATION,DEIN_FACH",
+        json={
+            "pfLocations": [
+                {"locationType": "POSTFILIALE"},
+                {"locationType": "DEIN_FACH", "primaryKeyPF": "../wrong"},
+                {**station, "zipCode": 67141},
+                {**station, "zipCode": "bogus"},
+                {**station, "primaryKeyZipRegion": "0189"},
+                {**station, "geoPosition": {"distance": 3500}},
+            ]
+        },
+    )
+    detail_url = f"{API_BASE}/locationByPrimaryKeyPF/1-67141189"
+    aioclient_mock.get(detail_url, json=station)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={"postal_code": "67142", "station_number": ""},
+    )
+    assert result["step_id"] == "nearby"
+    selector = next(iter(result["data_schema"].schema.values()))
+    assert selector.config["options"] == [
+        {
+            "value": "1-67141189",
+            "label": "Packstation 189 · Industriestr. 10 67141 Neuhofen · 3.5 km",
+        }
+    ]
+    with patch(
+        "custom_components.dhl_packstation.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"primary_key": "1-67141189"}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**INPUT, "primary_key": "1-67141189"}
+
+
+@pytest.mark.parametrize(
+    ("payload", "error"),
+    [({}, "invalid_response"), ({"pfLocations": []}, "station_not_found")],
+)
+async def test_nearby_errors(hass, aioclient_mock, payload, error):
+    from custom_components.dhl_packstation.const import API_BASE
+
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=67141&maxResults=20&locationType=PACKSTATION,DEIN_FACH",
+        json=payload,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={"postal_code": "67141"},
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    ("status", "response", "error"),
+    [
+        (204, {}, "station_not_found"),
+        (200, [], "invalid_response"),
+        (503, {}, "cannot_connect"),
+    ],
+)
+async def test_nearby_detail_errors(
+    hass, aioclient_mock, station, status, response, error
+):
+    from custom_components.dhl_packstation.const import API_BASE
+
+    aioclient_mock.get(
+        f"{API_BASE}/nearbySearch?address=67141&maxResults=20&locationType=PACKSTATION,DEIN_FACH",
+        json={"pfLocations": [station]},
+    )
+    aioclient_mock.get(
+        f"{API_BASE}/locationByPrimaryKeyPF/1-67141189", status=status, json=response
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={"postal_code": "67141"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"primary_key": "1-67141189"}
+    )
+    assert result["step_id"] == "nearby"
+    assert result["errors"] == {"base": error}

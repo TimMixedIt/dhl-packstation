@@ -23,7 +23,15 @@ async def test_cards_register_once_per_integration(hass):
         config = http.async_register_static_paths.call_args.args[0][0]
         assert config.url_path == "/dhl_packstation"
         assert config.cache_headers is False
-        for name in ["cards.js", "data.js", "view.js", "styles.js", "editor.js"]:
+        for name in [
+            "cards.js",
+            "data.js",
+            "view.js",
+            "styles.js",
+            "editor.js",
+            "tools.js",
+            "station-view.js",
+        ]:
             assert (Path(config.path) / name).is_file()
     assert hass.data[DATA_EXTRA_MODULE_URL] == {"/dhl_packstation/cards.js?v=0.3.0"}
 

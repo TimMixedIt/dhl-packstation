@@ -10,15 +10,19 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TextSelector,
 )
 
 from .api import (
     InvalidResponse,
+    NearbyStation,
     PackstationClient,
+    PackstationData,
     PackstationError,
     StationNotFound,
-    normalize_location,
 )
 from .const import (
     CONF_MAX_AGE,
@@ -36,48 +40,97 @@ class PackstationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _nearby: dict[str, NearbyStation]
+
+    def _client(self) -> PackstationClient:
+        return PackstationClient(async_get_clientsession(self.hass))
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Validate the exact location with DHL before creating an entry."""
+        """Use a station number for exact setup, or search by postal code."""
         errors = {}
         if user_input is not None:
+            postal = user_input[CONF_POSTAL_CODE]
+            number = user_input.get(CONF_STATION_NUMBER, "").strip()
             try:
-                postal_code, station_number = normalize_location(
-                    user_input[CONF_POSTAL_CODE], user_input[CONF_STATION_NUMBER]
-                )
+                if number:
+                    return await self._async_create_station(
+                        await self._client().async_resolve(postal, number)
+                    )
+                self._nearby = await self._client().async_nearby(postal)
+                if not self._nearby:
+                    raise StationNotFound("No lockers nearby")
+                return await self.async_step_nearby()
             except ValueError:
                 errors["base"] = "invalid_location"
+            except StationNotFound:
+                errors["base"] = "station_not_found"
+            except InvalidResponse:
+                errors["base"] = "invalid_response"
+            except PackstationError:
+                errors["base"] = "cannot_connect"
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_POSTAL_CODE): TextSelector(),
+                    probatio.Optional(CONF_STATION_NUMBER): TextSelector(),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_nearby(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the selected search result against DHL detail data."""
+        errors = {}
+        if user_input is not None:
+            key = user_input[CONF_PRIMARY_KEY]
+            if key not in self._nearby:
+                errors["base"] = "station_not_found"
             else:
-                client = PackstationClient(async_get_clientsession(self.hass))
+                selection = self._nearby[key]
                 try:
-                    station = await client.async_resolve(postal_code, station_number)
+                    return await self._async_create_station(
+                        await self._client().async_get_station(
+                            key, selection.postal_code, selection.station_number
+                        )
+                    )
                 except StationNotFound:
                     errors["base"] = "station_not_found"
                 except InvalidResponse:
                     errors["base"] = "invalid_response"
                 except PackstationError:
                     errors["base"] = "cannot_connect"
-                else:
-                    await self.async_set_unique_id(station.primary_key)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=f"Packstation {station_number} · {postal_code} {station.city}",
-                        data={
-                            CONF_POSTAL_CODE: postal_code,
-                            CONF_STATION_NUMBER: station_number,
-                            CONF_PRIMARY_KEY: station.primary_key,
-                        },
-                    )
         return self.async_show_form(
-            step_id="user",
+            step_id="nearby",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_POSTAL_CODE): TextSelector(),
-                    probatio.Required(CONF_STATION_NUMBER): TextSelector(),
-                }
+                    probatio.Required(CONF_PRIMARY_KEY): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=key, label=station.label)
+                                for key, station in self._nearby.items()
+                            ]
+                        )
+                    ),
+                },
             ),
             errors=errors,
+        )
+
+    async def _async_create_station(self, station: PackstationData) -> ConfigFlowResult:
+        await self.async_set_unique_id(station.primary_key)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=f"Packstation {station.station_number} · {station.postal_code} {station.city}",
+            data={
+                CONF_POSTAL_CODE: station.postal_code,
+                CONF_STATION_NUMBER: station.station_number,
+                CONF_PRIMARY_KEY: station.primary_key,
+            },
         )
 
     @staticmethod

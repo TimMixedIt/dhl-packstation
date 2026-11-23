@@ -2,11 +2,17 @@
 
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .activity import SIGNAL_ALARM_UPDATED
 from .const import COMPARTMENTS
 from .coordinator import PackstationConfigEntry, PackstationCoordinator
 from .entity import PackstationEntity
@@ -24,6 +30,7 @@ async def async_setup_entry(
         [
             *(CompartmentSensor(entry.runtime_data, size) for size in COMPARTMENTS),
             SourceTimestampSensor(entry.runtime_data),
+            TotalSensor(entry.runtime_data),
         ]
     )
 
@@ -32,6 +39,7 @@ class CompartmentSensor(PackstationEntity, SensorEntity):
     """The exact number of free compartments for one size."""
 
     _attr_icon = "mdi:package-variant"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: PackstationCoordinator, size: str) -> None:
         """Initialize one compartment size."""
@@ -69,3 +77,32 @@ class SourceTimestampSensor(PackstationEntity, SensorEntity):
     def native_value(self) -> datetime | None:
         """Return the time of DHL's observation, not our HTTP request."""
         return self.coordinator.data.source_timestamp
+
+
+class TotalSensor(CompartmentSensor):
+    """Expose the complete total, weekly trend, and station location."""
+
+    def __init__(self, coordinator: PackstationCoordinator) -> None:
+        super().__init__(coordinator, "total")
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.data.total
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        attrs = super().extra_state_attributes
+        data = self.coordinator.data
+        activity = self.coordinator.activity
+        attrs.update(week=activity.week(data.primary_key), alarm=activity.alarm_state)
+        if data.coordinates is not None:
+            attrs["latitude"], attrs["longitude"] = data.coordinates
+        return attrs
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ALARM_UPDATED, self.async_write_ha_state
+            )
+        )
