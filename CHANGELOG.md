@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - Support DeinFach lockers listed by DHL, including live compartment counts when DHL provides them.
 - Start a persistent one-time package alarm for a mix of exact sizes from the overview card.

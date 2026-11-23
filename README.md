@@ -1,10 +1,10 @@
 # DHL Packstation
 
-Home Assistant integration for free S, M, L, and XL compartments at DHL Packstations and DeinFach lockers listed by DHL in Germany. Set up either type from the Home Assistant interface using the station's postal code and number. No DHL account or developer key is required.
+Compare free S, M, L and XL compartments at DHL Packstations and DHL-listed DeinFach lockers in Germany. Add stations by postal code, check where all your parcels fit, and get a Home Assistant notification when a matching station has space.
 
 This is an independent community project, not an official DHL product. See the verification section for test coverage and remaining field checks.
 
-[Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
+[Latest stable release](https://github.com/TimMixedIt/dhl-packstation/releases/latest) · [Deutsche Installationsanleitung](docs/INSTALLATION_DE.md)
 
 ## What it provides
 
@@ -13,8 +13,8 @@ Each station becomes one device with seven entities:
 | Entity | Purpose |
 | --- | --- |
 | Free S / M / L / XL compartments | The exact nonnegative count returned by DHL, including zero |
-| Total free compartments | The sum when all four counts are available, plus the weekday trend and location |
-| DHL data timestamp | The time of DHL's observation, converted to an aware timestamp |
+| Total free compartments | The sum when all four counts are available, plus station coordinates and the local weekday trend |
+| DHL data timestamp | The time of DHL's live observation and, when available, DHL's weekday utilization levels as an attribute |
 | DHL data stale or missing | A diagnostic problem indicator for missing, old, or implausibly future-dated timestamps |
 
 One shared request per station runs every 15 minutes. Counts expire after 60 minutes by default, without waiting for the next HTTP request. Change the accepted age (30–1440 minutes) in the integration's options. This is a local freshness policy, not a DHL guarantee.
@@ -33,9 +33,13 @@ Missing or invalid counts become unavailable individually. Missing, invalid, or 
 
 Search for **DHL Packstation** in **HACS**, or under **Settings → Marketplace** on Home Assistant 2026.11 and newer, and download the integration. Restart Home Assistant, then go to **Settings → Devices & services → Add integration → DHL Packstation** to set up your station.
 
+Enter the station's postal code and number. Leave the station number empty to pick a nearby DHL Packstation or DeinFach locker from the search results. Setup uses the public DHL location finder and requires no DHL account or developer key.
+
+To upgrade from a beta or older release, select **0.4.0** in the repository's version picker if needed, restart Home Assistant and reload the dashboard. Existing station entries, entity IDs and card settings carry over.
+
 ### Manual ZIP installation
 
-1. Extract the installation ZIP. Copy its `custom_components/dhl_packstation` folder to `<HA config>/custom_components/dhl_packstation`. The final path must contain `manifest.json` directly inside `dhl_packstation`.
+1. Extract the installation ZIP from the latest stable release. Copy its `custom_components/dhl_packstation` folder to `<HA config>/custom_components/dhl_packstation`. The final path must contain `manifest.json` directly inside `dhl_packstation`.
 2. Restart Home Assistant after this manual installation.
 3. Go to **Settings → Devices & services → Add integration → DHL Packstation**.
 4. Enter the postal code **of the station** and its number, or leave the number blank to choose from nearby DHL and DeinFach lockers. Repeat for additional stations.
@@ -84,11 +88,17 @@ Station identifiers can be read from the entities' `dhl_packstation_id` attribut
 
 ## Package alarm, map and weekly trend
 
-The multi-station card compares free compartments by size in one row per station. Tap a station name to see its address, update time and directions. Under **Package alarm**, enter the number of packages per size (for example **1× S, 2× M**) to see which stations fit and which sizes are missing. The comparison updates as you type.
+The multi-station card compares free compartments by size in one row per station. Tap a station name to see its address, update time and directions.
 
-To start an alarm as a Home Assistant administrator, select the stations to watch and choose a notification destination. **HA inbox (no push)** places a message in Home Assistant's notification bell. Choose a device registered with the Companion app for push. The alarm fires once when one selected station reports enough fresh compartments, including immediately on start if applicable. The request survives a Home Assistant restart. Use **Stop search** to cancel or **New search** to clear a completed request. Automations can use `dhl_packstation.start_alarm` and `dhl_packstation.stop_alarm`.
+As a Home Assistant administrator:
 
-Station directions open in **Apple Maps** or **Google Maps**. **Station map** shows the configured stations together inside Home Assistant. Use the integration's setup wizard to find and add nearby stations by postal code.
+1. Open **Package alarm** in the toolbar and enter a mix of **exact** sizes, such as **1× S and 2× M**. The comparison shows where everything fits and which sizes are missing as you type.
+2. Select the stations to watch and where to send the notification. **HA inbox (no push)** adds a message to the Home Assistant notification bell. Select a device registered with the Companion app for push.
+3. Choose **Start search**. The search survives a restart and fires once when a single selected station reports enough fresh compartments. It can fire immediately. Choose **Stop search** to cancel or **New search** after a match.
+
+Automations can use the same functions through `dhl_packstation.start_alarm` and `dhl_packstation.stop_alarm`.
+
+**Station map** loads on demand and shows the stations selected in the overview that have coordinates. Open directions in **Apple Maps** or **Google Maps** from the map panel or a station's details.
 
 In the overview card editor, use **Display** to toggle the package alarm and station map independently. Both are shown by default. Hiding the alarm from a card leaves an active search running.
 
